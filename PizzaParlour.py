@@ -11,6 +11,12 @@ app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///test.db' #Sets the url of the
 db = SQLAlchemy(app)
 
 class Order(db.Model):
+    '''An order to a pizza parlor.
+    Attributes:
+        id: the order number
+        price: the total price of the order
+    '''
+
     id = db.Column(db.Integer, primary_key=True)
     price = db.Column(db.Float, nullable=False)
 
@@ -18,6 +24,12 @@ class Order(db.Model):
         return '<Order %r>' % self.id
 
 class Item(db.Model):
+    '''An order to a pizza parlor.
+    Attributes:
+        id: the internal id of the Item
+        price: the price of the item
+    '''
+
     id = db.Column(db.Integer, primary_key=True)
     price = db.Column(db.Float, nullable=False)
 
@@ -29,10 +41,17 @@ db.session.commit()
 
 @app.route('/pizza')
 def welcome_pizza():
+    ''' A route for testing. Use to confirm feedback.
+    '''
+
     return 'Welcome to Pizza Planet!'
 
 @app.route('/create_order', methods=(['POST']))
 def create_order():
+    ''' Creates a new order with the attributes given in request.form.
+    Attributes:
+        -price: the total price of the order
+    '''
     if request.method == 'POST':
         order_price = request.form.get('price',type=float) #.getlist('name[]')
         new_order = Order(price=order_price)
@@ -61,6 +80,12 @@ def create_order():
 
 @app.route('/delete_order/<int:id>', methods=(['POST']))
 def delete_order(id):
+    ''' Deletes an order with the id given in the request's url.
+    Example: deleting order 4
+        /delete_order/4
+        result: the order with id 4 is deleted
+        returns 'Order 4 deleted'
+    '''
     if request.method == 'POST':
         order_to_delete = Order.query.get_or_404(id)
 
