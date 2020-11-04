@@ -67,19 +67,13 @@ def delete_order(id):
     return 'No order deleted'
 
 
-def create_app(testing):
+def create_app(testing, db_url):
     ''' Creates a flask app and attatches blueprints and database to it.
     testing determines where the db will write to primarily, as well as whether the app is in test mode.
     '''
-    if testing:
-        db_url = 'sqlite:///tests.db'
-        db_testing = True
-    else:
-        db_url = 'sqlite:///pizza.db'
-        db_testing = False
     app = Flask("Assignment 2")
     app.config['SQLALCHEMY_DATABASE_URI'] = db_url #Sets the url of the database
-    app.config['TESTING'] = db_testing
+    app.config['TESTING'] = testing
     #app.config["SQLALCHEMY_ECHO"] = True # All queries are printed if True
     db.init_app(app)
     app.app_context().push() # binds db to app
@@ -90,7 +84,7 @@ def create_app(testing):
 
 
 if __name__ == "__main__":
-    app = create_app(False)
+    app = create_app(False, 'sqlite:///pizza.db')
 
     init_db(db)
     app.run()#debug=True

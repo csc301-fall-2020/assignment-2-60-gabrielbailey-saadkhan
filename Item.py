@@ -1,11 +1,26 @@
+from Models import db
 
-class Item:
-    '''The information representing an item in an order'''
-    
-    def __init__(self, price):
-        self.price = price
+class Item(db.Model):
+    '''An item in an order.
+    Attributes:
+        id: the internal id of the Item
+        price: the price of the Item
+    '''
+    __tablename__ = 'item'
 
-# Still unsure about the format of the types. They also need to be updated.
+    id = db.Column(db.Integer, primary_key=True)
+    price = db.Column(db.Float, nullable=False)
+    type = db.Column(db.String(10))
+
+    __mapper_args__ = {
+        'polymorphic_identity':'item',
+        'polymorphic_on':type
+    }
+
+    def __repr__(self):
+        return '<Item %r: $%r>' % self.id, self.price
+
+# These should be their own tables, with relevent pizza and drink attributes pointing into a table entry. They need to be updateable.
 p_types = ['Pepperoni', 'Margherita', 'Vegetarian', 'Neapolitan']
 p_toppings = ['olives', 'tomatoes', 'mushrooms', 'jalapenos', 'chicken', 'beef', 'pepperoni']
 d_types = {'Coke':1.50, 'Diet Coke':1.60, 'Coke Zero':1.40, 'Pepsi':1.50, 'Diet Pepsi':1.40, 'Dr. Pepper':1.50, 'Water':0.0, 'Juice':1.00}
@@ -18,17 +33,29 @@ class Pizza(Item):
      type
      toppings'''
 
-    def __init__(self, price, p_type, toppings, size):
-        Item.__init__(self, price) 
-        
-        self.size = size
-        self.type = p_type
-        self.toppings = toppings
+    id = db.Column(db.Integer, db.ForeignKey('item.id'), primary_key=True)
+    size = db.Column(db.Integer, nullable=False)
+    p_type = db.Column(db.Integer, nullable=False)
+    toppings = db.Column(db.Integer, nullable=False)
+    price = db.Column(db.Float, nullable=False)
+
+    type = db.Column(db.String(10))
+
+    __mapper_args__ = {
+        'polymorphic_identity':'pizza',
+        'polymorphic_on':type
+    }
 
 class Drink(Item):
     '''The information representing a pizza in an order'''
 
-    def __init__(self, price, d_type):
-        Item.__init__(self, price) 
-        
-        self.type = d_type
+    id = db.Column(db.Integer, db.ForeignKey('item.id'), primary_key=True)
+    d_type = db.Column(db.Integer, nullable=False)
+    price = db.Column(db.Float, nullable=False)
+
+    type = db.Column(db.String(10))
+
+    __mapper_args__ = {
+        'polymorphic_identity':'drink',
+        'polymorphic_on':type
+    }

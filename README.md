@@ -8,10 +8,13 @@ TODO:
 -Add more meaningful tests for create_order and delete_order, especially for the commands side of things.
 -Add more meaningful output and return values for the Commands functions (?)
 -Seperate flask blueprints into another file.
--See if the models can even be put in other files without db breaking.
+-Fix Flask http request responses excepting everything rather than specific exceptions
+-Fix Commands crashing for certain bad input or bad http request responses
 -...
 -Get github actions or something working?
 
+done
+-See if the models can even be put in other files without db breaking.
 
 Thought the features might be too big, and prof said "you might have 5 or 10 features...", so I've split them down further. Even if this is too small we can still use it as a guidline for incremental work in larger paired programming features.
 Again, feel free to modify.
