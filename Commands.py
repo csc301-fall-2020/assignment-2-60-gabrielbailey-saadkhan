@@ -20,7 +20,10 @@ def create_order(comm):
     response = requests.post(url, data = myobj)
     print(response.text)
 
-    return True
+    if response.status_code == 200:
+        return True
+    else:
+        return False
 
 def delete_order(comm):
     ''' Sends a http request to the server to delete an order.
@@ -41,7 +44,10 @@ def delete_order(comm):
     response = requests.post(url)
     print(response.text)
 
-    return True
+    if response.status_code == 200:
+        return True
+    else:
+        return False
 
 if __name__ == "__main__":
     #Just loops infinitely, asking the user for input and trying to send it to the relevant function if it exists.
@@ -55,4 +61,4 @@ if __name__ == "__main__":
             try:
                 result = locals()[command[0]](command)
             except KeyError:
-                print('No command matches that input, try again.')
+                print('No command matches that input, try -help for more information.')

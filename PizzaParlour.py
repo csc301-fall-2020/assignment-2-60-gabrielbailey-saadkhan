@@ -1,52 +1,24 @@
 from flask import Flask
 #import Item, Order
-from flask import jsonify, request, session, redirect
+from flask import request, session
 
-app = Flask("Assignment 2")
+from Models import db, init_db, Order, Item
 
-# SQLAlchemy implementation
-from flask_sqlalchemy import SQLAlchemy
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///test.db' #Sets the url of the database
-#app.config["SQLALCHEMY_ECHO"] = True #Sets if all queries are printed
-db = SQLAlchemy(app)
+from flask import Blueprint
 
-class Order(db.Model):
-    '''An order to a pizza parlor.
-    Attributes:
-        id: the order number
-        price: the total price of the order
-    '''
+# The bluebrint for every backend request currently.
+# Should probably be moved to another file/split up as number and complexity of requests grow.
+# Also the name 'Assignment 2' maybe shouldn't be used here?
+bp = Blueprint('Assignment 2', __name__)
 
-    id = db.Column(db.Integer, primary_key=True)
-    price = db.Column(db.Float, nullable=False)
-
-    def __repr__(self):
-        return '<Order %r>' % self.id
-
-class Item(db.Model):
-    '''An order to a pizza parlor.
-    Attributes:
-        id: the internal id of the Item
-        price: the price of the item
-    '''
-
-    id = db.Column(db.Integer, primary_key=True)
-    price = db.Column(db.Float, nullable=False)
-
-    def __repr__(self):
-        return '<Order %r>' % self.id
-
-db.create_all()
-db.session.commit()
-
-@app.route('/pizza')
+@bp.route('/pizza')
 def welcome_pizza():
     ''' A route for testing. Use to confirm feedback.
     '''
 
     return 'Welcome to Pizza Planet!'
 
-@app.route('/create_order', methods=(['POST']))
+@bp.route('/create_order', methods=(['POST']))
 def create_order():
     ''' Creates a new order with the attributes given in request.form.
     Attributes:
@@ -69,16 +41,9 @@ def create_order():
         except:
             return 'Issue with adding order'
 
-
-    '''price = request.values #???
-    print(price)
-    newOrd = Order(1, price)
-    order_num += 1
-    orders.append(newOrd)'''
-
     return 'No new order'
 
-@app.route('/delete_order/<int:id>', methods=(['POST']))
+@bp.route('/delete_order/<int:id>', methods=(['POST']))
 def delete_order(id):
     ''' Deletes an order with the id given in the request's url.
     Example: deleting order 4
@@ -99,7 +64,33 @@ def delete_order(id):
         except:
             return 'Issue with deleting order'
 
-    return 'No new order'
+    return 'No order deleted'
+
+
+def create_app(testing):
+    ''' Creates a flask app and attatches blueprints and database to it.
+    testing determines where the db will write to primarily, as well as whether the app is in test mode.
+    '''
+    if testing:
+        db_url = 'sqlite:///tests.db'
+        db_testing = True
+    else:
+        db_url = 'sqlite:///pizza.db'
+        db_testing = False
+    app = Flask("Assignment 2")
+    app.config['SQLALCHEMY_DATABASE_URI'] = db_url #Sets the url of the database
+    app.config['TESTING'] = db_testing
+    #app.config["SQLALCHEMY_ECHO"] = True # All queries are printed if True
+    db.init_app(app)
+    app.app_context().push() # binds db to app
+
+    app.register_blueprint(bp) # adds blueprints to app
+
+    return app
+
 
 if __name__ == "__main__":
+    app = create_app(False)
+
+    init_db(db)
     app.run()#debug=True

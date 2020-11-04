@@ -4,21 +4,15 @@ Run the main Flask module by running `python3 PizzaParlour.py`
 
 Run unit tests with coverage by running `pytest --cov-report term --cov=. tests/unit_tests.py`
 
+TODO:
+-Add more meaningful tests for create_order and delete_order, especially for the commands side of things.
+-Add more meaningful output and return values for the Commands functions (?)
+-Seperate flask blueprints into another file.
+-See if the models can even be put in other files without db breaking.
+-...
+-Get github actions or something working?
 
-Pair Programming Features:
-1. Submit an order
-	Includes implementing all the objects that define an order/pizza/drink
-2. Ask for Pickup or Delivery
-	Includes implementing reading of JSON and csv filetypes
 
-3. Update existing order/ Cancel Order
-	Needs to be taken into consideration during 1. but should then be quick?
-4. Ask for the menu
-	Either the full menu or price of an item. Details up to us so can be short?
-
-Suggest 1 & 2 for the two pair programming sessions. If you have modifications, make them, and if you would rather be driver or navigator for one of them, claim them.
-
---------
 Thought the features might be too big, and prof said "you might have 5 or 10 features...", so I've split them down further. Even if this is too small we can still use it as a guidline for incremental work in larger paired programming features.
 Again, feel free to modify.
 
@@ -43,3 +37,16 @@ Program Features:
 Bonus Features:
 - Non-command line UI or API
 - Storage of info of session using SQLAlchemy or whatever
+
+Pair Programming Features:
+
+    Should explain which features were pair programmed
+    Should explain who the driver and navigator was for different parts of the features
+    Should give a reflection on how it went, and what you liked and disliked about this process
+
+1. Submit an Order/Cancel Order
+	Just the order & order number, without details. Includes getting the program and unittesting to work.
+	Driver: Gabriel
+	Navigator: Saad
+Gabriel: I found being the driver to be extremely stressful. Normally I just look up basic classes or syntax that I forget, but it felt like it would be embarassing in this environment. This feature especially took a lot of time, a lot more than was anticipated. It included setting up the project, and there was uncertainty about what the project structure should even be.
+	
