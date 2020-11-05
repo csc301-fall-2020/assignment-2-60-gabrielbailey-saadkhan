@@ -71,6 +71,7 @@ def create_app(testing, db_url):
     ''' Creates a flask app and attatches blueprints and database to it.
     testing determines where the db will write to primarily, as well as whether the app is in test mode.
     '''
+
     app = Flask("Assignment 2")
     app.config['SQLALCHEMY_DATABASE_URI'] = db_url #Sets the url of the database
     app.config['TESTING'] = testing

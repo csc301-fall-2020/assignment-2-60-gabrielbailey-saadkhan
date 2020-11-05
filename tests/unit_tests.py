@@ -10,7 +10,8 @@ class PizzaParlourTest(TestCase):
     def create_app(self):
         # used at the start of the tests in this class to create the app (I think)
         # pass in test configuration
-        return create_app(True, 'sqlite:///tests.db')
+        # Currently using in memory database to be a bit faster. to write to a db use 'tests.db' instead of :memory:
+        return create_app(True, 'sqlite:///:memory:')
 
     def setUp(self):
         # Used before every test to set up the database.
@@ -37,14 +38,14 @@ class PizzaParlourTest(TestCase):
 
         order = Order(price=3.5)
         db.session.add(order)
-        #print(order.id)
+
         # Have to place something in the db to get id:
         db.session.add(order) #make transaction to add order to the database
         db.session.flush() #Actually do it, updating order's id to the next id value
         print(order.id)
         db.session.delete(order) #make transaction to delete order from the database
         db.session.flush() #Actually do it, order stays the same though
-        #print(order.id)
+
         #assert Order.query.count() > 0
 
         response = self.client.post('/create_order', data=dict(id=order.id, price=order.price)) #crucial line: queries test server for response
@@ -95,21 +96,18 @@ cur_id = 0
 def mocked_requests_post(*args, **kwargs):
     class MockResponse:
         def __init__(self, text_data, status_code):
-            self.text_data = text_data
+            self.text = text_data
             self.status_code = status_code
-
-        def text(self):
-            return self.text_data
 
     
     if args[0] == url + 'create_order':
-        # Hm how do we get the data sent in the post request. Presumably in args[1+] but not sure exactly how.
-        #cur_id += 1
-        #print(args)
+        # data in post request is in kwargs. use print statement to see structure
+
+        #print(args, kwargs)
         return MockResponse('New order is: id '+str(cur_id)+', price '+str(kwargs['data']['price']), 200)
 
     elif args[0][0:len(url+'delete_order/')] == url+'delete_order/':
-        return MockResponse('Order '+args[0][len(url):-1]+' deleted', 200)
+        return MockResponse('Order '+args[0][-1]+' deleted', 200)
 
     return MockResponse(None, 404)
 
@@ -122,29 +120,46 @@ class CommandsTest(unittest.TestCase):
     # We patch 'requests.post' with our own method. The mock object is passed in to our test case method.
     @mock.patch('requests.post', side_effect=mocked_requests_post)
     def test_create_order(self, mock_post):
-        """Test whether the create_order command works
-        TODO: doesn't test much of anything right now, this is just how we'd do it"""
-        # Assert requests.get calls
+        """Test whether the create_order command works"""
         
         c = Commands
-        # capsys
-        out = io.StringIO()                  # Create StringIO object
-        sys.stdout = out                     #  and redirect stdout.
-        
-        # Tests if creating an order works first time
-        cur_id = 1
-        data = c.create_order(['create_order',4.2,True])
-        #out, err = capsys.readouterr()
-        assert data == True
-        #val = out.getvalue()
-        self.assert_stdout('New order is: id '+str(0)+', price1 '+str(4.2))
-        #assert val == 'New order is: id '+str(0)+', price1 '+str(4.2)
 
-        # Tests if creating an order works second time
-        data = c.create_order(['create_order',1,True])
-        #out, err = capsys.readouterr()
+        cli_output = io.StringIO()                  # Create StringIO object
+        sys.stdout = cli_output                     #  and redirect stdout.
+
+        # Tests if creating an order works first time
+        data = c.create_order(['create_order',4.2])
+
         assert data == True
-        #assert out == 'New order is: id '+str(1)+', price '+str(1)
+        val = cli_output.getvalue().partition('\n')[0]
+        assert val == 'New order is: id '+str(0)+', price '+str(4.2)
+        cli_output.truncate(0)
+        cli_output.seek(0)
+
+        # Tests if creating an order fails if input is too small
+        data = c.create_order(['create_order'])
+
+        assert data == False
+        val = cli_output.getvalue().partition('\n')[0]
+        assert val == 'Not enough arguments were input. Type "create_order -help" for more information.'
+        cli_output.truncate(0)
+        cli_output.seek(0)
+
+        # Tests if creating an order fails if input is -help
+        data = c.create_order(['create_order','-help'])
+
+        assert data == False
+        val = cli_output.getvalue().partition('\n')[0]
+        assert val == 'Create an order with a given price. Example: create_order 3.50'
+        cli_output.truncate(0)
+        cli_output.seek(0)
+
+        # Tests if creating an order works second time (redundant)
+        data = c.create_order(['create_order',1])
+        
+        assert data == True
+        val = cli_output.getvalue().partition('\n')[0]
+        assert val == 'New order is: id '+str(0)+', price '+str(1.0)
 
         # We can even assert that our mocked method was called with the right parameters
         #assert mock.call('http://someurl.com/test.json') in mock_post.call_args_list
@@ -153,21 +168,46 @@ class CommandsTest(unittest.TestCase):
         
 
         sys.stdout = sys.__stdout__                     # Reset redirect.
-        print ('Captured', out.getvalue())   # Now works as before.
 
-        assert len(mock_post.call_args_list) == 3
+        assert len(mock_post.call_args_list) == 2
 
     @mock.patch('requests.post', side_effect=mocked_requests_post)
     def test_delete_order(self, mock_post):
         """Test whether the delete_order command works"""
-        # Assert requests.get calls
+
         c = Commands
-        data = c.delete_order(['delete_order',1])
+
+        cli_output = io.StringIO()                  # Create StringIO object
+        sys.stdout = cli_output                     #  and redirect stdout.
+
+        # Tests if deleting an order works
+        data = c.delete_order(['delete_order',3])
+
         assert data == True
-        '''data = c.delete_order(['delete_order',1])
+        val = cli_output.getvalue().partition('\n')[0]
+        assert val == 'Order '+str(3)+' deleted'
+        cli_output.truncate(0)
+        cli_output.seek(0)
+
+        # Tests if deleting an order fails with no id
+        data = c.delete_order(['delete_order'])
+
         assert data == False
-        data = c.delete_order(['delete_order',0])
-        assert data == True'''
+        val = cli_output.getvalue().partition('\n')[0]
+        assert val == 'Not enough arguments were input. Type "delete_order -help" for more information.'
+        cli_output.truncate(0)
+        cli_output.seek(0)
+
+        # Tests if deleting an order gives help with -help
+        data = c.delete_order(['delete_order','-help'])
+
+        assert data == False
+        val = cli_output.getvalue().partition('\n')[0]
+        assert val == 'Delete an order with a given id. Example: delete_order 4'
+        cli_output.truncate(0)
+        cli_output.seek(0)
+
+        sys.stdout = sys.__stdout__                     # Reset redirect.
 
         assert len(mock_post.call_args_list) == 1
 
