@@ -1,0 +1,14 @@
+{
+    "chicken": 2.99,
+    "pepperoni": 1.99,
+    "beef": 2.99,
+    "olives": 1.50,
+    "tomatoes": 1.50,
+    "mushrooms": 1.50,
+    "jalapenos": 1.50,
+    "pepperoni_pizza": 9.0,
+    "vegetarian_pizza": 9.99,
+    "margherita_pizza": 10.50,
+    "neapolitan_pizza": 11.0,
+    "custom_pizza": 7.99 
+}

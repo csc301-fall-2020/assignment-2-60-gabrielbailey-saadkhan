@@ -1,0 +1,23 @@
+{
+    "pepperoni_pizza": {
+        "pepperoni": 1, 
+        "tomatoes": 1
+    },
+    "margherita_pizza": {
+        "tomatoes": 1, 
+        "mushroom": 1, 
+        "olives": 1
+    },
+    "vegetarian_pizza": {
+        "tomatoes": 1, 
+        "mushroom": 1, 
+        "olives": 1, 
+        "jalapenos":1
+    },
+    "neapolitan_pizza": {
+        "chicken": 1, 
+        "tomatoes": 1, 
+        "olives": 1
+    },
+    "custom_pizza": {}
+}
