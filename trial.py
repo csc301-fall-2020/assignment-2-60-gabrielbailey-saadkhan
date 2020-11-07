@@ -1,6 +1,8 @@
-from Order import OrderFactory
-from Product import Pizza
 
+
+import requests
+
+# TODO These two dictionaries need to be base on the json files, and have update functions
 pizza_type_dict = {
     "1": "vegetarian_pizza",
     "2": "pepperoni_pizza",
@@ -15,34 +17,25 @@ pizza_size_dict = {
     "3": "large",
     "4": "x-large"
 }
-order_fac = OrderFactory()
+url = 'http://127.0.0.1:5000'
 
-def get_valid_order_number():
-    order_number = input("Type a valid order number for this request: ")
-    order_number_int = int(order_number)
-    order = order_fac.is_valid_order_number(order_number_int)
-    while order is None:
-        order_number = input("Invalid Order Number. Please type a valid order number for this request: ")
-        order_number_int = int(order_number)
-        order = order_fac.is_valid_order_number(order_number_int)
-    return order_number_int
+def get_valid_order_number():    
+    path = '/new_order'
+    order_number = requests.get(url+path)
+
+    return int(order_number)
 
 def get_valid_item_number(order_number):
-    item_number = input("Type a valid item number for this request or type 0 to see all items in this order: ")
-    item_number_int = int(item_number)
-    item = order_fac.get_item_in_order_by_id(order_number, item_number_int)
-    while item_number_int == 0 or item is None:
-        if item_number_int == 0:
-            print(order_fac.get_order(order_number))
-            item_number = input("Now type a valid item number: ")
-        else:
-            item_number = input("Invalid item number. Please type a valid item number: ")
-        item_number_int = int(item_number)
-        item = order_fac.get_item_in_order_by_id(order_number, item_number_int)
-    return item_number_int
+    path = '/new_item'
+    item_number = requests.get(url+path+'/'+str(order_number))
+
+    return int(item_number)
 
 def decide_item_to_edit(order_number, item_number):
-    if order_fac.is_pizza(order_number, item_number) == "True":
+    path = '/new_item'
+    is_pizza = requests.get(url+path+'/'+str(order_number)+'/'+str(item_number))
+    # ^This should be item type probably
+    if is_pizza:
         edit_pizza(order_number, item_number)
 
 def edit_pizza(order_number, item_number):
@@ -63,35 +56,37 @@ def edit_pizza(order_number, item_number):
         edit_pizza_toppings(order_number, item_number)
 
 def edit_pizza_type(order_number, item_number):
-    print("Enter 1 if you would like to change this pizza to a Vegetarian Pizza")
-    print("Enter 2 if you would like to change this pizza to a Pepperoni Pizza")
-    print("Enter 3 if you would like to change this pizza to a Margherita Pizza")
-    print("Enter 4 if you would like to change this pizza to a Neopolitan Pizza")
-    print("Enter 5 if you would like to change this pizza to a Custom Pizza")
+    pt_len = len(pizza_type_dict)
+    for i in range(1,pt_len+1):
+        print("Enter "+i+" if you would like to change this pizza to a "+pizza_type_dict[i][:-6]+" Pizza")
     print("Enter 6 to cancel")
     pizza_type = input("Enter your choice: ")
-    while pizza_type not in ["1", "2", "3", "4", "5", "6"]:
+    while pizza_type not in [str(i) for i in range(1,pt_len+2)]:
         pizza_type = input("Invalid input. Enter choice again: ")
-    if pizza_type == "6":
+    if pizza_type == str(pt_len):
         return
-    order_fac.update_item(order_number, item_number, "type", pizza_type_dict[pizza_type])
+    path = '/update_pizza'
+    data = {'order_num': order_number, 'item_number':item_number, 'type': pizza_type_dict[pizza_type]}
+    requests.post(url+path, data = data)
 
 def edit_pizza_size(order_number, item_number):
-    print("Enter 1 if you would like to change this pizza to a small size pizza")
-    print("Enter 2 if you would like to change this pizza to a medium size pizza")
-    print("Enter 3 if you would like to change this pizza to a large size pizza")
-    print("Enter 4 if you would like to change this pizza to a x-large size pizza")
+    ps_len = len(pizza_size_dict)
+    for i in range(1,ps_len+1):
+        print("Enter "+i+" if you would like to change this pizza to a "+pizza_size_dict[i]+" size pizza")
     print("Enter 5 to cancel")
     pizza_size = input("Enter your choice: ")
-    while pizza_size not in ["1", "2", "3", "4", "5"]:
+    while pizza_size not in [str(i) for i in range(1,ps_len+2)]:
         pizza_size = input("Invalid input. Enter choice again: ")
-    if pizza_size == "5":
+    if pizza_size == str(ps_len):
         return
-    order_fac.update_item(order_number, item_number, "size", pizza_size_dict[pizza_size])
+    path = '/update_pizza'
+    data = {'order_num': order_number, 'item_number':item_number, 'size': pizza_size_dict[pizza_size]}
+    requests.post(url+path, data = data)
 
 def edit_pizza_toppings(order_number, item_number):
     print("Here are the current toppings in this pizza: ")
-    print(order_fac.get_toppings(order_number, item_number))
+    path = '/toppings'
+    print(requests.get(url+path+'/'+str(order_number)+'/'+str(item_number)))
     print("Enter add if you would like to add toppings")
     print("Enter remove if you would like to remove toppings")
     print("Enter cancel to cancel")
@@ -101,57 +96,63 @@ def edit_pizza_toppings(order_number, item_number):
     if add_or_remove == "cancel":
         return
     toppings = custom_pizza_route()
-    order_fac.update_item(order_number, item_number, "toppings", toppings, add_or_remove)
+    path = '/update_pizza'
+    data = {'order_num': order_number, 'item_number':item_number, 'toppings': toppings, 'add_or_remove': add_or_remove }
+    requests.post(url+path, data = data)
     
 
 
 def create_new_pizza(order_number):
     toppings_list = None
-    print("Enter 1 if you would like a Vegetarian Pizza")
-    print("Enter 2 if you would like a Pepperoni Pizza")
-    print("Enter 3 if you would like a Margherita Pizza")
-    print("Enter 4 if you would like a Neopolitan Pizza")
-    print("Enter 5 if you would like a Custom Pizza")
-    print("Enter 6 to cancel")
+    pt_len = len(pizza_type_dict)
+    for i in range(1,pt_len+1):
+        print("Enter "+i+" if you would like a "+pizza_type_dict[i][:-6]+" Pizza")
+    print("Enter "+(pt_len+1)+" to cancel")
     pizza_type = input("Enter your choice: ")
-    while pizza_type not in ["1", "2", "3", "4", "5", "6"]:
+    while pizza_type not in [str(i) for i in range(1,pt_len+2)]:
         pizza_type = input("Invalid input. Enter choice again: ")
-    if pizza_type == "5":
+    if pizza_type_dict[pizza_type] == 'custom_pizza':
         toppings_list = custom_pizza_route()
         if toppings_list is None:
             return
-    if pizza_type == "6":
+    if pizza_type == str(pt_len+1):
         return
-    print("Enter 1 if you would like a small size pizza")
-    print("Enter 2 if you would like a medium size pizza")
-    print("Enter 3 if you would like a large size pizza")
-    print("Enter 4 if you would like a x-large size pizza")
-    print("Enter 5 to cancel")
+
+    ps_len = len(pizza_size_dict)
+    for i in range(1,ps_len+1):
+        print("Enter "+i+" if you would like a "+pizza_size_dict[i]+" size pizza")
+    print("Enter "+(ps_len+1)+" to cancel")
     pizza_size = input("Enter your choice: ")
-    while pizza_size not in ["1", "2", "3", "4", "5"]:
+    while pizza_size not in [str(i) for i in range(1,ps_len+2)]:
         pizza_size = input("Invalid input. Enter choice again: ")
-    if pizza_size == "5":
+    if pizza_size == str(ps_len+1):
         return
+
     quantity = input("Enter quantity needed: ")
-    items = []
-    for i in range(0, int(quantity)):
-        items.append(Pizza(pizza_type_dict[pizza_type], 0, pizza_size_dict[pizza_size], toppings_list))
-    print(order_fac.add_to_order(order_number, items))
+    path = '/create_pizza'
+    data = {'order_num': order_number, 'quantity':quantity, 'pizza_type':pizza_type_dict[pizza_type], 'pizza_size': pizza_size_dict[pizza_size], 'toppings': toppings_list}
+    requests.post(url+path, data = data)
 
 def custom_pizza_route():
     toppings = ["olives", "jalapenos", "tomatoes", "mushroom", "chicken", "beef", "pepperoni"]
-    print(toppings)
+    #print(toppings)
+    for i in range(1,len(toppings)+1):
+        print("Enter "+i+" if you would like "+toppings[i]+" on your pizza")
+    print("Enter "+(len(toppings)+1)+" if you are finished adding toppings")
+    print("Enter "+(len(toppings)+2)+" to cancel and exit adding toppings")
+    topping = input("Enter your choice: ")
     to_return = []
-    topping = input("Please type the ingredient that you would like from the list above. Remember the spelling must match exactly! If you are finished adding toppings wrtie 'done'. Type cancel to exit: ")
-    while topping != "done":
+    #topping = input("Please type the ingredient that you would like from the list above. Remember the spelling must match exactly! If you are finished adding toppings wrtie 'done'. Type cancel to exit: ")
+    while topping != str(len(toppings)+1):
         while topping not in toppings and topping != "cancel":
-            topping = input("You have entered an invalid topping. Check your spelling. Type cancel to exit: ")
-        if topping == "cancel":
+            topping = input("Invalid input. Enter choice again: ")
+        if topping == str(len(toppings)+2):
             return None
         quantity = input("Enter the quantity of the topping: ")
         for i in range(0, int(quantity)):
             to_return.append(topping)
-        topping = input("Please type the ingredient that you would like from the list above. Remember the spelling must match exactly! If you are finished adding toppings wrtie 'done'. Type cancel to exit:  ")
+        topping = input("Enter your choice: ")
+        #topping = input("Please type the ingredient that you would like from the list above. Remember the spelling must match exactly! If you are finished adding toppings write 'done'. Type cancel to exit:  ")
     return to_return
 
 
@@ -162,7 +163,7 @@ while(True):
     print("Enter 3 to update an order")
     choice = input("Enter your choice: ")
     if choice == "1":
-        print(order_fac.create_new_order())
+        print(requests.get(url+'create_order'))
     elif choice == "2":
         create_new_pizza(get_valid_order_number())
     elif choice == "3":
