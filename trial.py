@@ -68,7 +68,7 @@ def get_valid_item_number(order_number):
 def decide_item_to_edit(order_number, item_number):
     path = '/item_type'
     is_pizza = requests.get(url+path+'/'+str(order_number)+'/'+str(item_number)).content
-    print(is_pizza)
+    #print(is_pizza)
     # ^This should be item type probably
     if is_pizza:
         edit_pizza(order_number, item_number)

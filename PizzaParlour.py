@@ -41,15 +41,12 @@ def get_item(order_id, item_id):
     
     return order_fac.get_item_in_order_by_id(order_id, item_id)
 
-# @bp.route('/get_orders')
-# def get_orders(order_id):
-#     ''' Returns a description of all current orders
-#     '''
-#     orders_desc = []
-#     # TODO The loop below should not have to access Order to get their ids
-#     for order in order_fac.orders
-#         orders_desc.append(order_fac.get_order(order.order_number))
-#     return orders_desc
+@bp.route('/get_order/<int:order_id>')
+def get_order(order_id):
+    ''' Returns a description of all current orders
+    '''
+
+    return order_fac.get_order(order_id)
 
 @bp.route('/item_type/<int:order_id>/<int:item_id>')
 def is_pizza(order_id, item_id):
