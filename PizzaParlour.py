@@ -2,14 +2,16 @@ from flask import Flask
 #import Item, Order
 from flask import request, session
 
-from Models import db, init_db, Order, Item
-
 from flask import Blueprint
 
 # The bluebrint for every backend request currently.
 # Should probably be moved to another file/split up as number and complexity of requests grow.
 # Also the name 'Assignment 2' maybe shouldn't be used here?
 bp = Blueprint('Assignment 2', __name__)
+
+from Order import OrderFactory
+from Product import Product, Pizza
+order_fac = OrderFactory()
 
 @bp.route('/pizza')
 def welcome_pizza():
@@ -18,66 +20,89 @@ def welcome_pizza():
 
     return 'Welcome to Pizza Planet!'
 
-@bp.route('/create_order', methods=(['POST']))
+@bp.route('/new_order')
+def new_order():
+    ''' Creates a new empty order. Returns that order's id.
+    '''
+    
+    return order_fac.create_new_order().split()[-1]
+
+@bp.route('/get_item/<int:order_id>/<int:item_id>')
+def get_item(order_id, item_id):
+    ''' Returns an item given its order and its id.
+    '''
+    
+    return order_fac.get_item_in_order_by_id(order_id, item_id)
+
+@bp.route('/get_order/<int:order_id>')
+def get_order(order_id):
+    ''' Returns an order given its id.
+    '''
+    
+    return order_fac.get_order(order_id)
+
+@bp.route('/item_type/<int:order_id>/<int:item_id>')
+def is_pizza(order_id, item_id):
+    ''' Returns whether or not the specified item is a pizza.
+    '''
+    
+    return order_fac.is_pizza(order_id, item_id)
+
+@bp.route('/update_pizza/<update_type>', methods = ['POST'])
+def update_pizza(update_type):
+    ''' Edits the item indicated in the update_type way using the provided data.
+    '''
+
+    if request.method == 'POST':
+        order_number = request.form.get('order_number',type=int)
+        item_number = request.form.get('item_number',type=int)
+        if update_type == 'type':
+            pizza_type = request.form.get(update_type,type=str)
+            order_fac.update_item(order_number, item_number, update_type, pizza_type)
+        elif update_type == 'size':
+            pizza_size = request.form.get('pizza_size',type=str)
+            order_fac.update_item(order_number, item_number, update_type, pizza_size)
+        elif update_type == 'toppings':
+            toppings = request.form.get('toppings',type=list)
+            add_or_remove = request.form.get('add_or_remove',type=bool)
+            order_fac.update_item(order_number, item_number, update_type, toppings, add_or_remove)
+
+@bp.route('/create_pizza', methods = ['POST'])
+def create_pizza():
+    ''' Edits the item indicated in the update_type way using the provided data.
+    '''
+
+    if request.method == 'POST':
+        order_number = request.form.get('order_number',type=int)
+        quantity = request.form.get('quantity',type=int)
+        pizza_type = request.form.get('pizza_type',type=str)
+        pizza_size = request.form.get('pizza_size',type=str)
+        toppings = request.form.get('toppings',type=list)
+
+        items = []
+        for i in range(0, int(quantity)):
+            items.append(Pizza(pizza_type, 0, pizza_size, toppings))
+        return(order_fac.add_to_order(order_number, items))
+
+
+@bp.route('/create_order')
 def create_order():
-    ''' Creates a new order with the attributes given in request.form.
-    Attributes:
-        -price: the total price of the order
+    ''' Creates a new, empty order
     '''
-    if request.method == 'POST':
-        order_price = request.form.get('price',type=float) #.getlist('name[]')
-        new_order = Order(price=order_price)
-        #print('op:'+str(order_price)) #debugging line
-        try:
-            db.session.add(new_order)
-            db.session.commit()
-
-            ''' Code for printing all current orders
-            porders = Order.query.order_by(Order.id).all()
-            for por in porders:
-                print(por.id, por.price)'''
-
-            return 'New order is: id '+str(new_order.id)+', price '+str(order_price)
-        except:
-            return 'Issue with adding order'
-
-    return 'No new order'
-
-@bp.route('/delete_order/<int:id>', methods=(['POST']))
-def delete_order(id):
-    ''' Deletes an order with the id given in the request's url.
-    Example: deleting order 4
-        /delete_order/4
-        result: the order with id 4 is deleted
-        returns 'Order 4 deleted'
-    '''
-    if request.method == 'POST':
-        order_to_delete = Order.query.get_or_404(id)
-
-        try:
-            db.session.delete(order_to_delete)
-            db.session.commit()
-            
-            #print(order_to_delete.id, order_to_delete.price) #debug line; prints deleted order's info
-
-            return 'Order '+str(id)+' deleted'
-        except:
-            return 'Issue with deleting order'
-
-    return 'No order deleted'
+    return order_fac.create_new_order()
 
 
-def create_app(testing, db_url):
+def create_app(testing):
     ''' Creates a flask app and attatches blueprints and database to it.
     testing determines where the db will write to primarily, as well as whether the app is in test mode.
     '''
 
     app = Flask("Assignment 2")
-    app.config['SQLALCHEMY_DATABASE_URI'] = db_url #Sets the url of the database
+    #app.config['SQLALCHEMY_DATABASE_URI'] = db_url #Sets the url of the database
     app.config['TESTING'] = testing
     #app.config["SQLALCHEMY_ECHO"] = True # All queries are printed if True
-    db.init_app(app)
-    app.app_context().push() # binds db to app
+    #db.init_app(app)
+    #app.app_context().push() # binds db to app
 
     app.register_blueprint(bp) # adds blueprints to app
 
@@ -85,7 +110,7 @@ def create_app(testing, db_url):
 
 
 if __name__ == "__main__":
-    app = create_app(False, 'sqlite:///pizza.db')
+    app = create_app(False)
 
-    init_db(db)
+    #init_db(db)
     app.run()#debug=True
