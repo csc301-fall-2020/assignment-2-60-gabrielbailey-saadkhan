@@ -27,6 +27,13 @@ def new_order():
     
     return order_fac.create_new_order().split()[-1]
 
+@bp.route('/order_is_valid/<int:order_id>')
+def order_is_valid(order_id):
+    ''' Returns whether or not the given order id is valid.
+    '''
+
+    return order_fac.is_valid_order_number(order_id)
+
 @bp.route('/get_item/<int:order_id>/<int:item_id>')
 def get_item(order_id, item_id):
     ''' Returns an item given its order and its id.
@@ -34,12 +41,15 @@ def get_item(order_id, item_id):
     
     return order_fac.get_item_in_order_by_id(order_id, item_id)
 
-@bp.route('/get_order/<int:order_id>')
-def get_order(order_id):
-    ''' Returns an order given its id.
-    '''
-    
-    return order_fac.get_order(order_id)
+# @bp.route('/get_orders')
+# def get_orders(order_id):
+#     ''' Returns a description of all current orders
+#     '''
+#     orders_desc = []
+#     # TODO The loop below should not have to access Order to get their ids
+#     for order in order_fac.orders
+#         orders_desc.append(order_fac.get_order(order.order_number))
+#     return orders_desc
 
 @bp.route('/item_type/<int:order_id>/<int:item_id>')
 def is_pizza(order_id, item_id):
@@ -47,6 +57,13 @@ def is_pizza(order_id, item_id):
     '''
     
     return order_fac.is_pizza(order_id, item_id)
+
+@bp.route('/get_toppings/<int:order_id>/<int:item_id>', methods = ['POST'])
+def get_toppings(order_id, item_id):
+    ''' Returns the toppings of the specified pizza.
+    '''
+
+    return order_fac.get_toppings(order_id, item_id)
 
 @bp.route('/update_pizza/<update_type>', methods = ['POST'])
 def update_pizza(update_type):
@@ -77,11 +94,12 @@ def create_pizza():
         quantity = request.form.get('quantity',type=int)
         pizza_type = request.form.get('pizza_type',type=str)
         pizza_size = request.form.get('pizza_size',type=str)
-        toppings = request.form.get('toppings',type=list)
-
+        toppings = request.form.getlist('toppings',type=str)
+        
         items = []
         for i in range(0, int(quantity)):
             items.append(Pizza(pizza_type, 0, pizza_size, toppings))
+            
         return(order_fac.add_to_order(order_number, items))
 
 
