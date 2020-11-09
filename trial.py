@@ -29,7 +29,7 @@ def get_valid_order_number():
     order_number = int(input("Type a valid order number for this request: "))   
     
     path = '/order_is_valid'
-    while not requests.get(url+path+'/'+str(order_number)).content:
+    while not requests.get(url+path+'/'+str(order_number)).text == 'True':
         order_number = int(input("Invalid Order Number. Please type a valid order number for this request: "))
     return order_number
 
@@ -136,10 +136,9 @@ def edit_pizza_toppings(order_number, item_number):
         add_or_remove = False
     toppings = custom_pizza_route(add_or_remove)
     path = '/update_pizza'
-    data = {'order_number': order_number, 'item_number':item_number, 'toppings': toppings, 'add_or_remove': 'add_or_remove' }
+    data = {'order_number': order_number, 'item_number':item_number, 'toppings': toppings, 'add_or_remove': add_or_remove }
     requests.post(url+path+'/toppings', data = data)
     
-
 
 def create_new_pizza(order_number):
     toppings_list = None
@@ -197,6 +196,22 @@ def custom_pizza_route(add_or_remove = True):
         #topping = input("Please type the ingredient that you would like from the list above. Remember the spelling must match exactly! If you are finished adding toppings write 'done'. Type cancel to exit:  ")
     return to_return
 
+def create_delivery(order_number):
+    address = input('Enter your address: ')
+    types = ['pickup', 'pizzaparlour', 'ubereats', 'foodora']
+
+    print('Enter 1 to pick it up from the store')
+    print('Enter 2 to have it delivered by PizzaParlour')
+    print('Enter 3 to have it delivered by Uber Eats')
+    print('Enter 4 to have it delivered by Foodora')
+    delivery_type = input('Enter your choice: ')
+    while delivery_type not in [str(i) for i in range(1,5)]:
+        delivery_type = input('Not a valid choice. Enter another: ')
+    
+    path = '/create_delivery'
+    data = {'address': address, 'delivery_type':types[int(delivery_type)-1] }
+    return requests.post(url+path+'/'+str(order_number), data = data).text
+
 def create_item():
     order_id = get_valid_order_number()
     print("Enter 1 to add a new pizza")
@@ -210,10 +225,24 @@ def create_item():
 def create_order():
     print(requests.get(url+'/create_order').text)
 
+def delivery_choices():
+    order_number = get_valid_order_number()
+    print(create_delivery(order_number))
+
+def display_orders():
+    path = '/get_order_list'
+    print(requests.get(url+path).text)
+
 def edit_order():
     order_number = get_valid_order_number()
-    item_number = get_valid_item_number(order_number)
-    decide_item_to_edit(order_number, item_number)
+    print("Enter 1 to modify an item")
+    print("Enter 2 to modify the delivery")
+    choice = input("Enter your choice: ")
+    if choice == "1":
+        item_number = get_valid_item_number(order_number)
+        decide_item_to_edit(order_number, item_number)
+    if choice == "2":
+        print(create_delivery(order_number))
 
 def exit_cli():
     #Used for indicating that orders should be saved if we get around to implementing that
@@ -223,8 +252,9 @@ while(True):
     print("Enter 1 to create a new order")
     print("Enter 2 to add products to an order")
     print("Enter 3 to update an order")
-    print("Enter 4 to display all orders")
-    print("Enter 5 to exit")
+    print("Enter 4 for delivery options")
+    print("Enter 5 to display all orders")
+    print("Enter 6 to exit")
     choice = input("Enter your choice: ")
     if choice == "1":
         create_order()
@@ -233,8 +263,10 @@ while(True):
     elif choice == "3":
         edit_order()
     elif choice == "4":
-        print('no')
+        delivery_choices()
     elif choice == "5":
+        display_orders()
+    elif choice == "6":
         exit_cli()
 
 

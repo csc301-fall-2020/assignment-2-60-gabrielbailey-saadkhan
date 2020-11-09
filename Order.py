@@ -1,4 +1,5 @@
 import Product
+from Delivery import Delivery
 
 class OrderFactory():
     def __init__(self):
@@ -16,6 +17,12 @@ class OrderFactory():
         if order is not None:
             return order.get_order()
         return "This order number is invalid"
+
+    def get_order_list(self):
+        order_info = "Current Orders:\nID     Price"
+        for order in self.orders:
+            order_info += "\n" + str(order.order_number) + "    " + str(order.order_total)
+        return order_info
     
     def is_valid_order_number(self, order_number):
         for order in self.orders:
@@ -45,6 +52,9 @@ class OrderFactory():
         order = self.is_valid_order_number(order_number)
         return order.get_toppings(item_number)
 
+    def schedule_delivery(self, order_number, delivery_type, address):
+        order = self.is_valid_order_number(order_number)
+        return order.schedule_delivery(address, delivery_type)
     
     def update_item(self, order_number, item_number, to_update, value, add_or_remove=None):
         order = self.is_valid_order_number(order_number)
@@ -59,6 +69,7 @@ class Order():
         self.order_total = 0
         self.id_count = 1
         self.ids_to_items = {}
+        self.delivery = None
     
     def get_order_number(self):
         return self.order_number
@@ -78,8 +89,14 @@ class Order():
     def get_order(self):
         string = "Order ID: " + str(self.order_number) + "\nOrder Total: " + str(self.order_total) + "\nItems in Order: \n"
         for items in self.items:
-            string += str(items) + "\n"
+            string += "\n" + str(items)
         return string
+
+    def get_order_details(self):
+        details = "Order Total: " + str(self.order_total) + "\nItems in Order: "
+        for items in self.items:
+            details += "\n"+str(items) 
+        return details
     
     def get_item_by_id(self, item_id):
         if item_id in self.ids_to_items:
@@ -93,6 +110,13 @@ class Order():
     
     def get_toppings(self, item_number):
         return self.ids_to_items[item_number].get_toppings()
+
+    def get_delivery(self):
+        return self.delivery
+
+    def schedule_delivery(self, address, delivery_type):
+        self.delivery = Delivery(self.order_number, address, delivery_type)
+        return self.delivery.deliver(self.get_order_details())
     
     def update_item(self, item_number, to_update, value, add_or_remove = None):
         if to_update == "type":

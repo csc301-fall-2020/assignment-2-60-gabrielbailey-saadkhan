@@ -32,7 +32,7 @@ def order_is_valid(order_id):
     ''' Returns whether or not the given order id is valid.
     '''
 
-    return order_fac.is_valid_order_number(order_id)
+    return str(order_fac.is_valid_order_number(order_id) != None)
 
 @bp.route('/get_item/<int:order_id>/<int:item_id>')
 def get_item(order_id, item_id):
@@ -43,10 +43,27 @@ def get_item(order_id, item_id):
 
 @bp.route('/get_order/<int:order_id>')
 def get_order(order_id):
-    ''' Returns a description of all current orders
+    ''' Returns a description of the order with the given id
     '''
 
     return order_fac.get_order(order_id)
+
+@bp.route('/get_order_list')
+def get_all_orders():
+    ''' Returns a description of all current orders
+    '''
+
+    return order_fac.get_order_list()
+
+@bp.route('/create_delivery/<int:order_id>', methods = ['POST'])
+def create_delivery(order_id):
+    ''' Creates a delivery for the given order id
+    '''
+
+    if request.method == 'POST':
+        delivery_type = request.form.get('delivery_type',type=str)
+        address = request.form.get('address',type=str)
+        return order_fac.schedule_delivery(order_id, delivery_type, address)
 
 @bp.route('/item_type/<int:order_id>/<int:item_id>')
 def is_pizza(order_id, item_id):
