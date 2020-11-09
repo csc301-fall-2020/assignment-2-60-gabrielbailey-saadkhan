@@ -2,19 +2,31 @@
 
 Run the main Flask module by running `python3 PizzaParlour.py`
 
+run the CLI by running `python3 trial.py`
+
 Run unit tests with coverage by running `pytest --cov-report term --cov=. tests/unit_tests.py`
+
+The CLI is made up of several menues. The main menu is:
+
+Enter 1 to create a new order
+Enter 2 to add products to an order
+Enter 3 to update an order
+Enter 4 for delivery options
+Enter 5 to display all orders
+Enter 6 to exit
+
+1 creates a new, empty order.
+2 is used to add products to those orders
+	Creating new custom pizzas is contained in this option
+3 is used to modify orders that already have information
+4 is used to add delivery information to an order
 
 TODO:
 -Add more meaningful tests for create_order and delete_order, especially for the commands side of things.
 -Add more meaningful output and return values for the Commands functions (?)
 -Seperate flask blueprints into another file.
--Fix Flask http request responses excepting everything rather than specific exceptions
 -Fix Commands crashing for certain bad input or bad http request responses
--...
--Get github actions or something working?
 
-done
--See if the models can even be put in other files without db breaking.
 
 Thought the features might be too big, and prof said "you might have 5 or 10 features...", so I've split them down further. Even if this is too small we can still use it as a guidline for incremental work in larger paired programming features.
 Again, feel free to modify.
