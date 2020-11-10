@@ -34,6 +34,8 @@ def get_valid_order_number():
     return order_number
 
 def get_item(order_number, item_number):
+    if type(order_number) != int or type(item_number)!=int:
+        return 'Those are not valid ids: '+str(order_number)+', '+str(item_number)
     path = '/get_item'
     response = requests.get(url+path+'/'+str(order_number)+'/'+str(item_number))
     return(response.text)
@@ -43,26 +45,24 @@ def get_order(order_number):
     response = requests.get(url+path+'/'+str(order_number))
     return(response.text)
 
-def get_orders(order_number):
-    path = '/get_orders'
-    response = requests.get(url+path)
-    return(response.text)
-
 def get_valid_item_number(order_number):
-
-    item_number = int(input("Type a valid item number for this request or type 0 to see all items in this order: "))
+    if type(order_number) != int:
+        return "This order number is invalid: "+str(order_number)
+    item_number = input("Type a valid item number for this request or type 0 to see all items in this order: ")
     path = '/get_item'
     response = requests.get(url+path+'/'+str(order_number)+'/'+str(item_number))
     item = response.text
-    while item_number == 0 or item is None:
-        if item_number == 0:
-            response = requests.get(url+'/get_order'+'/'+str(order_number))
-            print(response.text)
-            item_number = int(input("Now type a valid item number: "))
-        else:
-            item_number = int(input("Invalid item number. Please type a valid item number: "))
-        response = requests.get(url+path+'/'+str(order_number)+'/'+str(item_number))
-        item = response.text
+    while type(item_number)!=int or item_number == 0 or item is None:
+        try:
+            item_number = int(item_number)
+            response = requests.get(url+path+'/'+str(order_number)+'/'+str(item_number))
+            item = response.text
+            if item_number == 0:
+                response = requests.get(url+'/get_order'+'/'+str(order_number))
+                print(response.text)
+                item_number = input("Now type a valid item number: ")
+        except ValueError:
+            item_number = input("Invalid item number. Please type a valid item number: ")
     return item_number
 
 def decide_item_to_edit(order_number, item_number):
@@ -168,6 +168,11 @@ def create_new_pizza(order_number):
         return
 
     quantity = input("Enter quantity needed: ")
+    while type(quantity) != int:
+        try:
+            quantity = int(quantity)
+        except ValueError:
+            quantity = input("Invalid quantity. Please enter a number: ")
     
     path = '/create_pizza'
     data = {'order_number': order_number, 'quantity':quantity, 'pizza_type':pizza_type_dict[pizza_type], 'pizza_size': pizza_size_dict[pizza_size], 'toppings': toppings_list}
@@ -185,11 +190,18 @@ def custom_pizza_route(add_or_remove = True):
     to_return = []
     #topping = input("Please type the ingredient that you would like from the list above. Remember the spelling must match exactly! If you are finished adding toppings wrtie 'done'. Type cancel to exit: ")
     while topping != str(len(toppings)+1):
-        while topping not in [str(i) for i in range(len(toppings))] and topping != str(len(toppings)+2):
+        while topping not in [str(i) for i in range(1,len(toppings)+3)]:
             topping = input("Invalid input. Enter choice again: ")
         if topping == str(len(toppings)+2):
             return None
+        if topping == str(len(toppings)+1):
+            return to_return
         quantity = input("Enter the quantity of the topping: ")
+        while type(quantity) != int:
+            try:
+                quantity = int(quantity)
+            except ValueError:
+                quantity = input("Invalid quantity. Please enter a number: ")
         for i in range(0, int(quantity)):
             to_return.append(toppings[int(topping)-1])
         topping = input("Enter your choice: ")
@@ -248,26 +260,28 @@ def exit_cli():
     #Used for indicating that orders should be saved if we get around to implementing that
     exit()
 
-while(True):
-    print("Enter 1 to create a new order")
-    print("Enter 2 to add products to an order")
-    print("Enter 3 to update an order")
-    print("Enter 4 for delivery options")
-    print("Enter 5 to display all orders")
-    print("Enter 6 to exit")
-    choice = input("Enter your choice: ")
-    if choice == "1":
-        create_order()
-    elif choice == "2":
-        create_item()
-    elif choice == "3":
-        edit_order()
-    elif choice == "4":
-        delivery_choices()
-    elif choice == "5":
-        display_orders()
-    elif choice == "6":
-        exit_cli()
+if __name__ == "__main__":
+    #Just loops infinitely, asking the user for input and trying to send it to the relevant function if it exists.
+    while(True):
+        print("Enter 1 to create a new order")
+        print("Enter 2 to add products to an order")
+        print("Enter 3 to update an order")
+        print("Enter 4 for delivery options")
+        print("Enter 5 to display all orders")
+        print("Enter 6 to exit")
+        choice = input("Enter your choice: ")
+        if choice == "1":
+            create_order()
+        elif choice == "2":
+            create_item()
+        elif choice == "3":
+            edit_order()
+        elif choice == "4":
+            delivery_choices()
+        elif choice == "5":
+            display_orders()
+        elif choice == "6":
+            exit_cli()
 
 
 
