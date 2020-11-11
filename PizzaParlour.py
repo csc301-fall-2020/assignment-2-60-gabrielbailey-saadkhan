@@ -48,6 +48,13 @@ def get_order(order_id):
 
     return order_fac.get_order(order_id)
 
+@bp.route('/cancel_order/<int:order_id>')
+def cancel_order(order_id):
+    ''' Returns a description of the order with the given id
+    '''
+
+    return order_fac.cancel_order(order_id)
+
 @bp.route('/get_order_list')
 def get_all_orders():
     ''' Returns a description of all current orders

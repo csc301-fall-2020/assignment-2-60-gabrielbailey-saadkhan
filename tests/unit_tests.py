@@ -407,6 +407,31 @@ class CommandTest(unittest.TestCase):
         assert len(mocked_input.call_args_list) == 14
 
 
+    @mock.patch('trial.input', create=True) 
+    @mock.patch('requests.get')
+    def test_cancel_order(self, mock_get,  mocked_input):
+        """Test whether the edit_pizza_etc commands work"""
+        
+        cli_output = io.StringIO()                  # Create StringIO object
+        sys.stdout = cli_output                     #  and redirect stdout.
+
+        mock_get.side_effect = [MockResponse('True', 200),
+        MockResponse('Something1', 200),MockResponse('True', 200),MockResponse('Something2', 200),MockResponse('False', 200),MockResponse('True', 200),MockResponse('Something3', 200)]
+        mocked_input.side_effect = ['1', 'y', 'a', '2', '3', '4']
+
+        trial.cancel_order()
+        assert cli_output.getvalue().split('\n')[-2]  == 'Something1'
+
+        trial.cancel_order()
+        assert cli_output.getvalue().split('\n')[-2]  == 'Something2'
+
+        trial.cancel_order()
+        assert cli_output.getvalue().split('\n')[-2]  == 'Something3'
+
+        assert len(mocked_input.call_args_list) == 6
+
+        sys.stdout = sys.__stdout__                     # Reset redirect.
+
     @mock.patch('trial.input', create=True)
     @mock.patch('requests.post')
     def test_create_delivery(self, mock_post,  mocked_input):

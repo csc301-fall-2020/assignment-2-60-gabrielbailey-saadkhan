@@ -25,12 +25,19 @@ def get_new_order_number():
 
     return int(order_number.text)
 
-def get_valid_order_number(): 
-    order_number = int(input("Type a valid order number for this request: "))   
-    
+def get_valid_order_number():
+    err = ""
     path = '/order_is_valid'
-    while not requests.get(url+path+'/'+str(order_number)).text == 'True':
-        order_number = int(input("Invalid Order Number. Please type a valid order number for this request: "))
+    order_number=-1
+    while order_number <0 or not requests.get(url+path+'/'+str(order_number)).text == 'True':
+        order_number = input(err+"Type a valid order number for this request: ")
+        while type(order_number) != int:
+            try:
+                order_number = int(order_number)
+            except ValueError:
+                order_number = input("Invalid Order Number. Please type a valid order number for this request: ")
+        err = "Not a current order. "
+                
     return order_number
 
 def get_item(order_number, item_number):
@@ -237,6 +244,10 @@ def create_item():
 def create_order():
     print(requests.get(url+'/create_order').text)
 
+def cancel_order():
+    order_number = get_valid_order_number()
+    print(requests.get(url+'/cancel_order/'+str(order_number)).text)
+
 def delivery_choices():
     order_number = get_valid_order_number()
     print(create_delivery(order_number))
@@ -266,9 +277,10 @@ if __name__ == "__main__":
         print("Enter 1 to create a new order")
         print("Enter 2 to add products to an order")
         print("Enter 3 to update an order")
-        print("Enter 4 for delivery options")
-        print("Enter 5 to display all orders")
-        print("Enter 6 to exit")
+        print("Enter 4 to cancel an order")
+        print("Enter 5 for delivery options")
+        print("Enter 6 to display all orders")
+        print("Enter 7 to exit")
         choice = input("Enter your choice: ")
         if choice == "1":
             create_order()
@@ -277,10 +289,12 @@ if __name__ == "__main__":
         elif choice == "3":
             edit_order()
         elif choice == "4":
-            delivery_choices()
+            cancel_order()
         elif choice == "5":
-            display_orders()
+            delivery_choices()
         elif choice == "6":
+            display_orders()
+        elif choice == "7":
             exit_cli()
 
 

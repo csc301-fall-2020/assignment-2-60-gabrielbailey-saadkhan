@@ -12,6 +12,13 @@ class OrderFactory():
         self.count += 1
         return "New Order Created with ID: " + str(order.get_order_number())
 
+    def cancel_order(self, order_number):
+        order = self.is_valid_order_number(order_number)
+        if order is not None:
+            self.orders.remove(order)
+            return "Order "+str(order_number)+" cancelled"
+        return "This order number is invalid"
+
     def get_order(self, order_number):
         order = self.is_valid_order_number(order_number)
         if order is not None:
