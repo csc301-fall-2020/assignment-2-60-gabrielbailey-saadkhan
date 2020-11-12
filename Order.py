@@ -71,6 +71,12 @@ class OrderFactory():
         for order in self.orders:
             order.update_all_items_price()
             order.update_total()
+    
+    def remove_item(self, order_number, item_number):
+        order = self.is_valid_order_number(order_number)
+        return order.remove_item(item_number)
+
+
 
 
 class Order():
@@ -123,6 +129,16 @@ class Order():
         if "pizza" in self.ids_to_items[item_number].get_type():
             return "True"
         return "False"
+
+    def remove_item(self, item_number):
+        temp = None
+        for i in range(0, len(self.items)):
+            if self.items[i].get_id() == item_number:
+                temp = i
+        del self.items[temp]
+        del self.ids_to_items[item_number]
+        self.update_total()
+        return "Item with item number " + str(item_number) + " has been deleted from order number " + str(self.order_number) 
     
     def get_toppings(self, item_number):
         return self.ids_to_items[item_number].get_toppings()

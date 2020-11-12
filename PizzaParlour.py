@@ -181,6 +181,16 @@ def create_drink():
             
         return(order_fac.add_to_order(order_number, items))
 
+@bp.route('/remove_item', methods = ['POST'])
+def remove_item():
+    ''' Edits the item indicated in the update_type way using the provided data.
+    '''
+
+    if request.method == 'POST':
+        order_number = request.form.get('order_number',type=int)
+        item_number = request.form.get('item_number',type=int)
+        return(order_fac.remove_item(order_number, item_number))
+
 
 @bp.route('/create_order')
 def create_order():

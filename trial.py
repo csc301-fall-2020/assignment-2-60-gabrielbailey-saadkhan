@@ -302,6 +302,11 @@ def create_item():
     if choice == "2":
         create_drink(order_id)
 
+def remove_item(order_number, item_number):
+    path = '/remove_item'
+    data = {'order_number': order_number, 'item_number':item_number}
+    print(requests.post(url+path, data = data).text)
+
 def create_order():
     print(requests.get(url+'/create_order').text)
 
@@ -321,12 +326,19 @@ def edit_order():
     order_number = get_valid_order_number()
     print("Enter 1 to modify an item")
     print("Enter 2 to modify the delivery")
+    print("Enter 3 to remove an item from this order")
+    print("Enter 4 to cancel")
     choice = input("Enter your choice: ")
     if choice == "1":
         item_number = get_valid_item_number(order_number)
         decide_item_to_edit(order_number, item_number)
     if choice == "2":
         print(create_delivery(order_number))
+    if choice == "3":
+        item_number = get_valid_item_number(order_number)
+        remove_item(order_number, item_number)
+    if choice == "4":
+        return
 
 def set_price():
     path = '/get_data/prices'
