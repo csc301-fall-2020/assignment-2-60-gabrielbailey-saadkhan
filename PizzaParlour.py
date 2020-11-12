@@ -11,6 +11,7 @@ bp = Blueprint('Assignment 2', __name__)
 
 from Order import OrderFactory
 from Product import Product, Pizza
+from Data import Data
 order_fac = OrderFactory()
 
 @bp.route('/pizza')
@@ -123,6 +124,33 @@ def create_pizza():
             
         return(order_fac.add_to_order(order_number, items))
 
+@bp.route('/get_data/<data_type>')
+def get_data(data_type):
+    ''' Returns a list of the specified type. Can be 'pizza_type', 'sizes', 'prices'.
+    '''
+
+    if data_type == 'pizza_types':
+        return Data.getInstance().get_pizza_to_toppings()
+    if data_type == 'pizza_sizes':
+        return Data.getInstance().get_size_qualifier()
+    if data_type == 'prices':
+        return Data.getInstance().get_prices_dict()
+    else:
+        return ["Not a valid datatype. Try 'pizza_type', 'sizes', or 'prices'."]
+
+@bp.route('/set_price', methods = ['POST'])
+def set_price():
+    ''' Returns a list of the specified type. Can be 'pizza_type', 'sizes', 'prices'.
+    '''
+
+    if request.method == 'POST':
+        product_name = request.form.get('product_name',type=str)
+        price = request.form.get('price',type=float)
+        
+        if Data.getInstance().set_price(product_name,price):
+            return product_name+"'s price set to "+str(price)
+        else:
+            return "Failure to set "+product_name+"'s price to "+str(price)
 
 @bp.route('/create_order')
 def create_order():

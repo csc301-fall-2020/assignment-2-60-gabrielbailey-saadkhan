@@ -50,4 +50,13 @@ class Data:
     def get_pizza_to_toppings():
         return Data.pizza_to_toppings
 
+    @staticmethod
+    def set_price(name, price):
+        with open('prices.json', 'w') as f:
+            try:
+                Data.prices[name] = price
+                json.dump(Data.prices, f, indent=4)
+            except:
+                return False
+        return True
     

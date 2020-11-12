@@ -89,10 +89,14 @@ url = 'http://127.0.0.1:5000/'
 cur_id = 0
 
 class MockResponse:
-        def __init__(self, text_data, status_code, content = ''):
+        def __init__(self, text_data, status_code, content = '', json_dict = {}):
             self.text = text_data
             self.status_code = status_code
             self.content = content
+            self.json_dict = json_dict
+        
+        def json(self):
+            return self.json_dict
 # This method will be used by the mock to replace requests.get
 def get_ints(string,i):
     num = ''
@@ -137,7 +141,7 @@ def mocked_requests_get(*args):
 def mock_filler(*args, **kwargs):
     return MockResponse(args, 200, kwargs)
 
-def mocked_requests_post_create_pizza(*args, **kwargs):
+def mocked_requests_post_kwargs_first(*args, **kwargs):
     return MockResponse(kwargs, 200)
 
 def mocked_requests_post(*args, **kwargs):
@@ -341,7 +345,7 @@ class CommandTest(unittest.TestCase):
 
 
     @mock.patch('trial.input', create=True)
-    @mock.patch('requests.post', side_effect=mocked_requests_post_create_pizza)
+    @mock.patch('requests.post', side_effect=mocked_requests_post_kwargs_first)
     def test_create_new_pizza(self, mock_post,  mocked_input):
         """Test whether the edit_pizza_etc commands work"""
 
@@ -455,5 +459,32 @@ class CommandTest(unittest.TestCase):
         assert delivery == 'Something4'
 
         assert len(mocked_input.call_args_list) == 8
+
+    @mock.patch('trial.input', create=True)
+    @mock.patch('requests.get')
+    @mock.patch('requests.post',side_effect=mocked_requests_post_kwargs_first)
+    def test_set_price(self, mock_post, mock_get, mocked_input):
+        """Test whether the set_price commands work"""
+
+        cli_output = io.StringIO()                  # Create StringIO object
+        sys.stdout = cli_output                     #  and redirect stdout.
+
+        mock_get.side_effect = [MockResponse('Something1', 200,json_dict={'a':1.5,'b':2.75,'c':4}), MockResponse('Something2', 200,json_dict={'a':1.5,'b':2.75,'c':4})]
+
+        mocked_input.side_effect = ['1', '7.2','b','2','y','-1','3']
+
+        def result_gen(name,price):
+            return str({'data':{'product_name': name,'price': price}})
+
+        trial.set_price()
+        assert cli_output.getvalue().split('\n')[-2]  == result_gen('a',7.2)
+
+        trial.set_price()
+        assert cli_output.getvalue().split('\n')[-2]  == result_gen('b',3.0)
+
+        assert len(mocked_input.call_args_list) == 7
+
+        sys.stdout = sys.__stdout__                     # Reset redirect.
+
 if __name__ == '__main__':
     unittest.main()

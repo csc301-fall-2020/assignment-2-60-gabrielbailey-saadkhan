@@ -267,11 +267,55 @@ def edit_order():
     if choice == "2":
         print(create_delivery(order_number))
 
+def set_price():
+    path = '/get_data/prices'
+    data = requests.get(url+path).json()
+    keys = list(data)
+    for i in range(1,len(data)+1):
+        print("Enter "+str(i)+" to change the price of "+str(keys[i-1])+": $"+str(data[keys[i-1]]))
+
+    index = input("Enter your choice: ")
+    while type(index) != int or index not in range(1,len(data)+1):
+        try:
+            index = int(index)
+            if index not in range(1,len(data)+1):
+                raise ValueError
+        except ValueError:
+            index = input("Invalid choice. Enter one of the numbers above: ")
+    
+    price = input("Enter the new price: ")
+    while type(price) != float or price < 0:
+        try:
+            price  = float(price)
+            if price < 0:
+                raise ValueError
+        except ValueError:
+            price  = input("Invalid price. Enter a real value: ")
+
+    path = '/set_price'
+    data = {'product_name': keys[index-1], 'price':price }
+    print(requests.post(url+path, data = data).text)
+
 def exit_cli():
     #Used for indicating that orders should be saved if we get around to implementing that
     exit()
 
 if __name__ == "__main__":
+    #Update pizza types and sizes to those stored in the files
+    path = '/get_data/pizza_types'
+    pizza_types = list(requests.get(url+path).json())
+
+    pizza_type_dict = {}
+    for i in range(1,len(pizza_types)+1):
+        pizza_type_dict[str(i)] = pizza_types[i-1]
+
+    path = '/get_data/pizza_sizes'
+    pizza_sizes = list(requests.get(url+path).json())
+
+    pizza_size_dict = {}
+    for i in range(1,len(pizza_sizes)+1):
+        pizza_size_dict[str(i)] = pizza_sizes[i-1]
+
     #Just loops infinitely, asking the user for input and trying to send it to the relevant function if it exists.
     while(True):
         print("Enter 1 to create a new order")
@@ -280,8 +324,10 @@ if __name__ == "__main__":
         print("Enter 4 to cancel an order")
         print("Enter 5 for delivery options")
         print("Enter 6 to display all orders")
-        print("Enter 7 to exit")
+        print("Enter 7 to change prices")
+        print("Enter 8 to exit")
         choice = input("Enter your choice: ")
+        
         if choice == "1":
             create_order()
         elif choice == "2":
@@ -295,6 +341,8 @@ if __name__ == "__main__":
         elif choice == "6":
             display_orders()
         elif choice == "7":
+            set_price()
+        elif choice == "8":
             exit_cli()
 
 
