@@ -55,30 +55,60 @@ def get_order(order_number):
 def get_valid_item_number(order_number):
     if type(order_number) != int:
         return "This order number is invalid: "+str(order_number)
-    item_number = input("Type a valid item number for this request or type 0 to see all items in this order: ")
     path = '/get_item'
-    response = requests.get(url+path+'/'+str(order_number)+'/'+str(item_number))
-    item = response.text
-    while type(item_number)!=int or item_number == 0 or item is None:
+    item = "None"
+    item_number = 0
+    while type(item_number)!=int or item_number == 0 or item == "None":
         try:
+            item_number = input("Type a valid item number for this request or type 0 to see all items in this order: ")
             item_number = int(item_number)
-            response = requests.get(url+path+'/'+str(order_number)+'/'+str(item_number))
-            item = response.text
             if item_number == 0:
                 response = requests.get(url+'/get_order'+'/'+str(order_number))
                 print(response.text)
-                item_number = input("Now type a valid item number: ")
+            else:
+                response = requests.get(url+path+'/'+str(order_number)+'/'+str(item_number))
+                item = response.text
+                if item == "None":
+                    print("Invalid Item Number")
         except ValueError:
             item_number = input("Invalid item number. Please type a valid item number: ")
     return item_number
 
 def decide_item_to_edit(order_number, item_number):
     path = '/item_type'
-    is_pizza = requests.get(url+path+'/'+str(order_number)+'/'+str(item_number)).content
-    #print(is_pizza)
+    is_pizza = requests.get(url+path+'/'+str(order_number)+'/'+str(item_number)).text
+    print(is_pizza)
     # ^This should be item type probably
-    if is_pizza:
+    if is_pizza == "True":
         edit_pizza(order_number, item_number)
+    else:
+        edit_drink(order_number, item_number)
+
+def edit_drink(order_number, item_number):
+    print("Enter 1 to edit Drink Brand")
+    print("Enter 2 to cancel")
+    choice = input("Enter your choice: ")
+    while choice not in ["1", "2"]:
+        choice = input("Please enter a valid choice: ")
+    if choice == "2":
+        return 
+    if choice == "1":
+        edit_drink_brand(order_number, item_number)
+
+def edit_drink_brand(order_number, item_number):
+    path = '/update_drink'
+    drink_brands = ["Coke", "Diet Coke", "Coke Zero", "Pepsi", "Diet Pepsi", "Dr. Pepper", "Water", "Juice"]
+    for i in range(1,len(drink_brands)+1):
+        print("Enter "+str(i)+" if you would like to change drink brand to "+ str(drink_brands[i - 1]))
+    print("Enter "+str(len(drink_brands)+1)+" to cancel and exit")
+    drinks = input("Enter your choice: ")
+    #topping = input("Please type the ingredient that you would like from the list above. Remember the spelling must match exactly! If you are finished adding toppings wrtie 'done'. Type cancel to exit: ")
+    while drinks not in [str(i) for i in range(1,len(drink_brands)+2)]:
+        drinks = input("Invalid input. Enter choice again: ")
+    if drinks == str(len(drink_brands)+1):
+        return None    
+    data = {'order_number': order_number, 'item_number':item_number, 'drink_brand':drink_brands[int(drinks) - 1]}
+    requests.post(url+path+'/brand', data = data).text
 
 def edit_pizza(order_number, item_number):
     print("Enter 1 to edit Pizza Type")
@@ -156,13 +186,14 @@ def create_new_pizza(order_number):
     pizza_type = input("Enter your choice: ")
     while pizza_type not in [str(i) for i in range(1,pt_len+2)]:
         pizza_type = input("Invalid input. Enter choice again: ")
+    if pizza_type == str(pt_len+1):
+        return
     if pizza_type_dict[pizza_type] == 'custom_pizza':
         toppings_list = custom_pizza_route()
         
         if toppings_list is None:
             return
-    if pizza_type == str(pt_len+1):
-        return
+    
 
     ps_len = len(pizza_size_dict)
     for i in range(1,ps_len+1):
@@ -182,6 +213,7 @@ def create_new_pizza(order_number):
             quantity = input("Invalid quantity. Please enter a number: ")
     
     path = '/create_pizza'
+    print(toppings_list)
     data = {'order_number': order_number, 'quantity':quantity, 'pizza_type':pizza_type_dict[pizza_type], 'pizza_size': pizza_size_dict[pizza_size], 'toppings': toppings_list}
     print(requests.post(url+path, data = data).text)
 
@@ -210,7 +242,9 @@ def custom_pizza_route(add_or_remove = True):
             except ValueError:
                 quantity = input("Invalid quantity. Please enter a number: ")
         for i in range(0, int(quantity)):
-            to_return.append(toppings[int(topping)-1])
+            temp = int(topping) - 1
+            to_return.append(toppings[temp])
+            print(to_return)
         topping = input("Enter your choice: ")
         #topping = input("Please type the ingredient that you would like from the list above. Remember the spelling must match exactly! If you are finished adding toppings write 'done'. Type cancel to exit:  ")
     return to_return
@@ -231,6 +265,33 @@ def create_delivery(order_number):
     data = {'address': address, 'delivery_type':types[int(delivery_type)-1] }
     return requests.post(url+path+'/'+str(order_number), data = data).text
 
+
+def create_drink(order_number):
+    path = '/create_drink'
+    drink_brands = ["Coke", "Diet Coke", "Coke Zero", "Pepsi", "Diet Pepsi", "Dr. Pepper", "Water", "Juice"]
+    for i in range(1,len(drink_brands)+1):
+        print("Enter "+str(i)+" if you would like a drink of brand "+ str(drink_brands[i - 1]))
+    print("Enter "+str(len(drink_brands)+1)+" to cancel and exit")
+    drinks = input("Enter your choice: ")
+    to_return = []
+    #topping = input("Please type the ingredient that you would like from the list above. Remember the spelling must match exactly! If you are finished adding toppings wrtie 'done'. Type cancel to exit: ")
+    while drinks not in [str(i) for i in range(1,len(drink_brands)+2)]:
+        drinks = input("Invalid input. Enter choice again: ")
+    if drinks == str(len(drink_brands)+1):
+        return None
+    quantity = input("Enter the quantity of the drinks: ")
+    while type(quantity) != int:
+        try:
+            quantity = int(quantity)
+        except ValueError:
+            quantity = input("Invalid quantity. Please enter a number: ")
+    for i in range(0, int(quantity)):
+        temp = int(drinks) - 1
+        to_return.append(drink_brands[temp])
+        #topping = input("Please type the ingredient that you would like from the list above. Remember the spelling must match exactly! If you are finished adding toppings write 'done'. Type cancel to exit:  ")
+    data = {'order_number': order_number, 'quantity':quantity, 'drinks':to_return}
+    print(requests.post(url+path, data = data).text)
+
 def create_item():
     order_id = get_valid_order_number()
     print("Enter 1 to add a new pizza")
@@ -239,7 +300,7 @@ def create_item():
     if choice == "1":
         create_new_pizza(order_id)
     if choice == "2":
-        print("no") # TODO
+        create_drink(order_id)
 
 def create_order():
     print(requests.get(url+'/create_order').text)

@@ -66,6 +66,11 @@ class OrderFactory():
     def update_item(self, order_number, item_number, to_update, value, add_or_remove=None):
         order = self.is_valid_order_number(order_number)
         order.update_item(item_number, to_update, value, add_or_remove)
+    
+    def update_totals(self):
+        for order in self.orders:
+            order.update_all_items_price()
+            order.update_total()
 
 
 class Order():
@@ -93,6 +98,10 @@ class Order():
         for items in self.items:
             self.order_total += items.price
     
+    def update_all_items_price(self):
+        for items in self.items:
+            items.update_prices()
+    
     def get_order(self):
         string = "Order ID: " + str(self.order_number) + "\nOrder Total: " + str(self.order_total) + "\nItems in Order: \n"
         for items in self.items:
@@ -108,7 +117,7 @@ class Order():
     def get_item_by_id(self, item_id):
         if item_id in self.ids_to_items:
             return str(self.ids_to_items[item_id])
-        return None
+        return "None"
     
     def is_pizza(self, item_number):
         if "pizza" in self.ids_to_items[item_number].get_type():
@@ -133,6 +142,8 @@ class Order():
             self.ids_to_items[item_number].update_pizza_size(value)
         elif to_update == "toppings":
             self.ids_to_items[item_number].update_toppings(add_or_remove, value)
+        elif to_update == "brand":
+            self.ids_to_items[item_number].update_brand(value)
         self.ids_to_items[item_number].update_prices()
         self.update_total()
 

@@ -89,6 +89,31 @@ class Pizza(Product):
         return '\033[1m' + "Item with ID: " + str(self.id) + '\033[0m' + "\nPizza Type: " + str(self.type) + "\nToppings: \n" + json.dumps(self.toppings, indent=4, sort_keys=True) + "\n"
 
 
+class Drink(Product):
+
+    def __init__(self, type: str, price: float, brand: str):
+        Product.__init__(self, type, price)
+        self.prices_given = Data.getInstance().get_prices_dict()
+        self.id = None
+        self.brand = brand
+        self.update_prices()    
+
+    def set_id(self, id):
+        self.id = id
+    
+    def update_prices(self):
+        self.price = self.prices_given[self.type]
+    
+    def update_brand(self, brand):
+        self.brand = brand
+
+    def __str__(self):
+        return '\033[1m' + "Item with ID: " + str(self.id) + '\033[0m' + "\nDrink Brand: " + str(self.brand)
+    
+
+
+
+
 
 
 

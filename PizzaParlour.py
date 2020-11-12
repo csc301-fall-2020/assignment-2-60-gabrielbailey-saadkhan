@@ -10,8 +10,8 @@ from flask import Blueprint
 bp = Blueprint('Assignment 2', __name__)
 
 from Order import OrderFactory
-from Product import Product, Pizza
 from Data import Data
+from Product import Product, Pizza, Drink
 order_fac = OrderFactory()
 
 @bp.route('/pizza')
@@ -106,6 +106,17 @@ def update_pizza(update_type):
             add_or_remove = request.form.get('add_or_remove',type=bool)
             order_fac.update_item(order_number, item_number, update_type, toppings, add_or_remove)
 
+@bp.route('/update_drink/<update_type>', methods = ['POST'])
+def update_drink(update_type):
+    ''' Edits the item indicated in the update_type way using the provided data.
+    '''
+
+    if request.method == 'POST':
+        order_number = request.form.get('order_number',type=int)
+        item_number = request.form.get('item_number',type=int)
+        drink_brand = request.form.get('drink_brand',type=str)
+        return order_fac.update_item(order_number, item_number, update_type, drink_brand)
+
 @bp.route('/create_pizza', methods = ['POST'])
 def create_pizza():
     ''' Edits the item indicated in the update_type way using the provided data.
@@ -117,9 +128,11 @@ def create_pizza():
         pizza_type = request.form.get('pizza_type',type=str)
         pizza_size = request.form.get('pizza_size',type=str)
         toppings = request.form.getlist('toppings',type=str)
-        
+        if len(toppings) == 0:
+            toppings = None
         items = []
         for i in range(0, int(quantity)):
+            print(toppings)
             items.append(Pizza(pizza_type, 0, pizza_size, toppings))
             
         return(order_fac.add_to_order(order_number, items))
@@ -148,9 +161,26 @@ def set_price():
         price = request.form.get('price',type=float)
         
         if Data.getInstance().set_price(product_name,price):
+            Data.getInstance().update_all()
+            order_fac.update_totals()
             return product_name+"'s price set to "+str(price)
         else:
             return "Failure to set "+product_name+"'s price to "+str(price)
+@bp.route('/create_drink', methods = ['POST'])
+def create_drink():
+    ''' Edits the item indicated in the update_type way using the provided data.
+    '''
+
+    if request.method == 'POST':
+        order_number = request.form.get('order_number',type=int)
+        quantity = request.form.get('quantity',type=int)
+        drinks = request.form.getlist('drinks',type=str)
+        items = []
+        for i in range(0, int(quantity)):
+            items.append(Drink("drink", 0, drinks[i]))
+            
+        return(order_fac.add_to_order(order_number, items))
+
 
 @bp.route('/create_order')
 def create_order():

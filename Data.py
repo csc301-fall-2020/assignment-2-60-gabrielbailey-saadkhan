@@ -15,9 +15,7 @@ class Data:
         
     def __init__(self):
         """ Virtually private constructor. """
-        if Data.__instance != None:
-            return Data.__instance
-        else:
+        if Data.__instance == None:
             Data.__instance = self
             self.read_prices()
             self.read_qualifiers()
@@ -49,6 +47,12 @@ class Data:
     @staticmethod
     def get_pizza_to_toppings():
         return Data.pizza_to_toppings
+    
+    @staticmethod
+    def update_all():
+        Data.read_prices()
+        Data.read_qualifiers()
+        Data.read_pizza_to_toppings()
 
     @staticmethod
     def set_price(name, price):
