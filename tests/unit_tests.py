@@ -383,7 +383,6 @@ class PizzaParlourTest(TestCase):
         # Tests if it will create multiple pizzas
         data = {'order_number':1,'quantity':2,'pizza_type': 'vegetarian_pizza' , 'pizza_size':'medium','toppings':['olives']}
         response = self.client.post('/create_pizza', data = data)
-        print(PP.order_fac.orders[0].get_item_by_id(1))
         assert response.status_code == 200
         assert 'vegetarian' in PP.order_fac.orders[0].get_item_by_id(1)
         assert 'medium' in PP.order_fac.orders[0].get_item_by_id(1)
@@ -543,8 +542,20 @@ import sys
 url = 'http://127.0.0.1:5000/'
 cur_id = 0
 
+from Data import Data
+pizza_types = list(Data.getInstance().get_pizza_to_toppings())
+pizza_type_dict = {}
+for i in range(1,len(pizza_types)+1):
+    pizza_type_dict[str(i)] = pizza_types[i-1]
+pizza_sizes = list(Data.getInstance().get_size_qualifier())
+pizza_size_dict = {}
+for i in range(1,len(pizza_sizes)+1):
+    pizza_size_dict[str(i)] = pizza_sizes[i-1]
+
 class MockResponse:
         def __init__(self, text_data, status_code, content = '', json_dict = {}):
+            if content != {}:
+                self.text = content
             self.text = text_data
             self.status_code = status_code
             self.content = content
@@ -552,6 +563,9 @@ class MockResponse:
         
         def json(self):
             return self.json_dict
+
+        def __str__(self):
+            return  str(self.status_code) +'\n'+ str(self.text) +'\n'+ str(self.content) +'\n'+ str(self.json_dict)
 # This method will be used by the mock to replace requests.get
 def get_ints(string,i):
     num = ''
@@ -602,9 +616,7 @@ def mocked_requests_post_kwargs_first(*args, **kwargs):
 def mocked_requests_post(*args, **kwargs):
  
     if args[0] == url + 'new_order':
-        # data in post request is in kwargs. use print statement to see structure
-
-        #print(args, kwargs)
+        # data in post request is in kwargs. use a print statement to see structure
         return MockResponse(0, 200)
         #'New order is: id '+str(cur_id)+', price '+str(kwargs['data']['price']),
     elif args[0][0:len(url+'delete_order/')] == url+'delete_order/':
@@ -621,7 +633,7 @@ class CommandTest(unittest.TestCase):
     # We patch 'requests.post' with our own method. The mock object is passed in to our test case method.
     @mock.patch('requests.get', side_effect=mocked_requests_get)
     def test_get_new_order_number(self, mock_get):
-        """Test whether the create_order command works"""
+        """Test whether the get_new_order_number command works"""
         
         c = trial
 
@@ -656,14 +668,11 @@ class CommandTest(unittest.TestCase):
                                     MockResponse('True', 200)]
         mocked_input.side_effect = ['0', '1','1']
 
-
         order_number = trial.get_valid_order_number()
-        assert order_number == 0
+        assert order_number == None
 
         order_number = trial.get_valid_order_number()
         assert order_number == 1
-
-        #sys.stdout = sys.__stdout__                     # Reset redirect.
 
         assert len(mock_get.call_args_list) == 3
 
@@ -675,14 +684,11 @@ class CommandTest(unittest.TestCase):
         # Too much reliance on backend. Just mocking replies directly now.
         mock_get.side_effect = [MockResponse('Item with ID: 1\nPizza \nType: vegetarian_pizza\nToppings:{}', 200)]
 
-
         item = trial.get_item(1,1)
         assert item == 'Item with ID: 1\nPizza \nType: vegetarian_pizza\nToppings:{}'
 
         item = trial.get_item('a','b')
         assert item == 'Those are not valid ids: a, b'
-
-        #sys.stdout = sys.__stdout__                     # Reset redirect.
 
         assert len(mock_get.call_args_list) == 1
 
@@ -741,18 +747,52 @@ class CommandTest(unittest.TestCase):
         trial.decide_item_to_edit(3,4)
         mock_edit_drink.assert_called()
 
-        # Method not fully implemented, so not doing much testing
-        #item_num = trial.decide_item_to_edit('a', 'b')
-        #assert item_num == "These ids are invalid: a, b"
-
         assert len(mock_get.call_args_list) == 2
+
+    @mock.patch('trial.input', create=True)
+    @mock.patch('trial.edit_drink_brand')
+    def test_edit_drink(self, mock_drink_brand,  mocked_input):
+        """Test whether the edit_drink command works"""
+
+        mocked_input.side_effect = [ '2','a','1']
+
+        assert trial.edit_drink(1,1) == None
+
+        trial.edit_drink(2,2)
+        mock_drink_brand.assert_called()
+
+        assert len(mocked_input.call_args_list) == 3
+
+    @mock.patch('trial.input', create=True)
+    @mock.patch('requests.post',side_effect=mock_filler)
+    def test_edit_drink_brand(self, mock_post,  mocked_input):
+        """Test whether the edit_drink_brand command works"""
+
+        cli_output = io.StringIO()                  # Create StringIO object
+        sys.stdout = cli_output                     #  and redirect stdout.
+
+        mocked_input.side_effect = ['a','2']
+
+        trial.edit_drink_brand(2,2)
+        mock_post.assert_called()
+
+        output_list = cli_output.getvalue().split(' ')
+        cancel = output_list[output_list.index("cancel")-2]
+
+        mocked_input.side_effect = [cancel]
+
+        assert trial.edit_drink_brand(1,1) == None
+
+        assert len(mocked_input.call_args_list) == 3
+
+        sys.stdout = sys.__stdout__                     # Reset redirect.
 
     @mock.patch('trial.input', create=True)
     @mock.patch('trial.edit_pizza_type',side_effect=mock_filler)
     @mock.patch('trial.edit_pizza_size',side_effect=mock_filler)
     @mock.patch('trial.edit_pizza_toppings',side_effect=mock_filler)
     def test_edit_pizza(self, mock_top, mock_size, mock_type ,  mocked_input):
-        """Test whether the get_valid_item_number command works"""
+        """Test whether the get_edit_pizza command works"""
 
         mocked_input.side_effect = ['1', '2','3','a','4']
 
@@ -771,8 +811,10 @@ class CommandTest(unittest.TestCase):
 
     @mock.patch('trial.input', create=True)
     @mock.patch('requests.post', side_effect=mocked_requests_post)
+    @mock.patch('trial.pizza_type_dict', pizza_type_dict)
+    @mock.patch('trial.pizza_size_dict', pizza_size_dict)
     def test_edit_pizza_attribute(self, mock_post,  mocked_input):
-        """Test whether the edit_pizza_etc commands work"""
+        """Test whether the edit_pizza commands work"""
 
         mock_post.side_effect = [MockResponse('Something1', 200),MockResponse("These ids are invalid: a, b", 200),
         MockResponse('Something2', 200),MockResponse('Something3', 200),
@@ -802,53 +844,65 @@ class CommandTest(unittest.TestCase):
 
         assert len(mock_post.call_args_list) == 5
 
-
-
     @mock.patch('trial.input', create=True)
+    @mock.patch('trial.custom_pizza_route')
     @mock.patch('requests.post', side_effect=mocked_requests_post_kwargs_first)
-    def test_create_new_pizza(self, mock_post,  mocked_input):
-        """Test whether the edit_pizza_etc commands work"""
+    @mock.patch('trial.pizza_type_dict', pizza_type_dict)
+    @mock.patch('trial.pizza_size_dict', pizza_size_dict)
+    def test_create_new_pizza(self, mock_post, mock_custom_route, mocked_input):
+        """Test whether the create_new_pizza commands work"""
 
-        mocked_input.side_effect = ['1', '1','1', '2','2','2','3','3','3','4','4','4','a','1','b','2','c','3']
         cli_output = io.StringIO()                  # Create StringIO object
         sys.stdout = cli_output                     #  and redirect stdout.
 
-        # These tests are effectively hard-coded, but the pizza types should be dynamic
-        # TODO: make tests dynamic as well
-
+        # These tests could be more general regarding the formatting
+        
+        mocked_input.side_effect = ['1', '1','1']
         trial.create_new_pizza(1)
         mock_post.assert_called()
 
-        assert cli_output.getvalue().split('\n')[-2] == "{'data': {'order_number': 1, 'quantity': 1, 'pizza_type': 'vegetarian_pizza', 'pizza_size': 'small', 'toppings': None}}"
+        assert cli_output.getvalue().split('\n')[-2] == "{'data': {'order_number': 1, 'quantity': 1, 'pizza_type': '"+str(pizza_type_dict['1'])+"', 'pizza_size': 'small', 'toppings': None}}"
 
+        mocked_input.side_effect = ['2','2','2']
         trial.create_new_pizza(2)
         mock_post.assert_called()
 
-        assert cli_output.getvalue().split('\n')[-2] == "{'data': {'order_number': 2, 'quantity': 2, 'pizza_type': 'pepperoni_pizza', 'pizza_size': 'medium', 'toppings': None}}"
+        assert cli_output.getvalue().split('\n')[-2] == "{'data': {'order_number': 2, 'quantity': 2, 'pizza_type': '"+str(pizza_type_dict['2'])+"', 'pizza_size': 'medium', 'toppings': None}}"
 
+        mocked_input.side_effect = ['3','3','3']
         trial.create_new_pizza(3)
         mock_post.assert_called()
 
-        assert cli_output.getvalue().split('\n')[-2] == "{'data': {'order_number': 3, 'quantity': 3, 'pizza_type': 'margherita_pizza', 'pizza_size': 'large', 'toppings': None}}"
+        assert cli_output.getvalue().split('\n')[-2] == "{'data': {'order_number': 3, 'quantity': 3, 'pizza_type': '"+str(pizza_type_dict['3'])+"', 'pizza_size': 'large', 'toppings': None}}"
 
+        mocked_input.side_effect = ['4','4','4']
         trial.create_new_pizza(4)
         mock_post.assert_called()
 
-        assert cli_output.getvalue().split('\n')[-2] == "{'data': {'order_number': 4, 'quantity': 4, 'pizza_type': 'neapolitan_pizza', 'pizza_size': 'x-large', 'toppings': None}}"
+        assert cli_output.getvalue().split('\n')[-2] == "{'data': {'order_number': 4, 'quantity': 4, 'pizza_type': '"+str(pizza_type_dict['4'])+"', 'pizza_size': 'x-large', 'toppings': None}}"
 
+        mocked_input.side_effect = ['5','4','5']
+        mock_custom_route.side_effect = [['pepperoni']]
+        trial.create_new_pizza(5)
+        mock_custom_route.assert_called()
+        mock_post.assert_called()
+
+        assert cli_output.getvalue().split('\n')[-2] == "{'data': {'order_number': 5, 'quantity': 5, 'pizza_type': '"+str(pizza_type_dict['5'])+"', 'pizza_size': 'x-large', 'toppings': ['pepperoni']}}"
+
+        mocked_input.side_effect = ['a','1','b','2','c','3']
         trial.create_new_pizza(5)
         mock_post.assert_called()
 
-        assert cli_output.getvalue().split('\n')[-2] == "{'data': {'order_number': 5, 'quantity': 3, 'pizza_type': 'vegetarian_pizza', 'pizza_size': 'medium', 'toppings': None}}"
+        assert cli_output.getvalue().split('\n')[-2] == "{'data': {'order_number': 5, 'quantity': 3, 'pizza_type': '"+str(pizza_type_dict['1'])+"', 'pizza_size': 'medium', 'toppings': None}}"
 
-        assert len(mock_post.call_args_list) == 5
+        assert len(mock_post.call_args_list) == 6
 
         sys.stdout = sys.__stdout__                     # Reset redirect.
 
     @mock.patch('trial.input', create=True)
     @mock.patch('requests.post')
     def test_custom_pizza_route(self, mock_post,  mocked_input):
-        """Test whether the edit_pizza_etc commands work"""
+        """Test whether the custom_pizza_route commands work"""
         
         mock_post.side_effect = [MockResponse('Something1', 200),MockResponse("These ids are invalid: a, b", 200),
         MockResponse('Something2', 200),MockResponse('Something3', 200),
@@ -870,11 +924,114 @@ class CommandTest(unittest.TestCase):
 
         assert len(mocked_input.call_args_list) == 14
 
+    @mock.patch('trial.input', create=True)
+    @mock.patch('requests.post')
+    def test_create_delivery(self, mock_post,  mocked_input):
+        """Test whether the create_delivery commands work"""
+        
+        mock_post.side_effect = [MockResponse('Something1', 200),
+        MockResponse('Something2', 200),MockResponse('Something3', 200),
+        MockResponse('Something4', 200),MockResponse('Something5', 200)]
+        mocked_input.side_effect = ['1', '2','3','4','y','1','2','1']
+
+        delivery = trial.create_delivery(1)
+        assert delivery == 'Something1'
+
+        delivery = trial.create_delivery(1)
+        assert delivery == 'Something2'
+
+        delivery = trial.create_delivery(1)
+        assert delivery == 'Something3'
+
+        delivery = trial.create_delivery(1)
+        assert delivery == 'Something4'
+
+        assert len(mocked_input.call_args_list) == 8
+
+    @mock.patch('trial.input', create=True)
+    @mock.patch('requests.post',side_effect=mocked_requests_post_kwargs_first)
+    def test_create_drink(self, mock_post,  mocked_input):
+        """Test whether the create_drink commands work"""
+
+        cli_output = io.StringIO()                  # Create StringIO object
+        sys.stdout = cli_output                     #  and redirect stdout.
+
+        mocked_input.side_effect = ['a','3','b','2']
+
+        trial.create_drink(1)
+        mock_post.assert_called()
+        assert '2' in cli_output.getvalue().split('\n')[-2]
+
+        output_list = cli_output.getvalue().split(' ')
+        cancel = output_list[output_list.index("cancel")-2]
+
+        mocked_input.side_effect = [cancel]
+
+        assert trial.create_drink(2) == None
+
+        assert len(mocked_input.call_args_list) == 5
+
+        sys.stdout = sys.__stdout__                     # Reset redirect.
+
+    @mock.patch('trial.input', create=True)
+    @mock.patch('trial.create_new_pizza')
+    @mock.patch('trial.create_drink')
+    @mock.patch('trial.get_valid_order_number')
+    def test_create_item(self, mock_order_id, mock_new_drink, mock_new_pizza,  mocked_input):
+        """Test whether the create_item commands work"""
+
+        cli_output = io.StringIO()                  # Create StringIO object
+        sys.stdout = cli_output                     #  and redirect stdout.
+
+        mocked_input.side_effect = ['a','3','2','1']
+        mock_order_id.side_effect = ['1','2','3']
+
+        trial.create_item()
+        # cli_output doesn't get output from input() commands
+        #assert 'invalid' in cli_output.getvalue().lower()
+
+        trial.create_item()
+        mock_new_drink.assert_called()
+
+        trial.create_item()
+        mock_new_pizza.assert_called()
+
+        assert len(mocked_input.call_args_list) == 4
+
+        sys.stdout = sys.__stdout__                     # Reset redirect.
+
+    @mock.patch('requests.post',side_effect=mocked_requests_post_kwargs_first)
+    def test_remove_item(self, mock_post):
+        """Test whether the remove_item commands work"""
+
+        cli_output = io.StringIO()                  # Create StringIO object
+        sys.stdout = cli_output                     #  and redirect stdout.
+
+        trial.remove_item(1,3)
+        assert '1' in cli_output.getvalue().split('\n')[-2]
+        assert '3' in cli_output.getvalue().split('\n')[-2]
+
+        sys.stdout = sys.__stdout__                     # Reset redirect.
+
+    @mock.patch('requests.get')
+    def test_create_order(self, mock_get):
+        """Test whether the create_order commands work"""
+
+        cli_output = io.StringIO()                  # Create StringIO object
+        sys.stdout = cli_output                     #  and redirect stdout.
+        mock_get.side_effect = [MockResponse('Something1', 200),MockResponse('Something2', 200)]
+
+        trial.create_order()
+        assert 'Something1' in cli_output.getvalue().split('\n')[-2]
+        trial.create_order()
+        assert 'Something2' in cli_output.getvalue().split('\n')[-2]
+
+        sys.stdout = sys.__stdout__                     # Reset redirect.
 
     @mock.patch('trial.input', create=True) 
     @mock.patch('requests.get')
     def test_cancel_order(self, mock_get,  mocked_input):
-        """Test whether the edit_pizza_etc commands work"""
+        """Test whether the cancel_order commands work"""
         
         cli_output = io.StringIO()                  # Create StringIO object
         sys.stdout = cli_output                     #  and redirect stdout.
@@ -896,29 +1053,7 @@ class CommandTest(unittest.TestCase):
 
         sys.stdout = sys.__stdout__                     # Reset redirect.
 
-    @mock.patch('trial.input', create=True)
-    @mock.patch('requests.post')
-    def test_create_delivery(self, mock_post,  mocked_input):
-        """Test whether the edit_pizza_etc commands work"""
-        
-        mock_post.side_effect = [MockResponse('Something1', 200),
-        MockResponse('Something2', 200),MockResponse('Something3', 200),
-        MockResponse('Something4', 200),MockResponse('Something5', 200)]
-        mocked_input.side_effect = ['1', '2','3','4','y','1','2','1']
-
-        delivery = trial.create_delivery(1)
-        assert delivery == 'Something1'
-
-        delivery = trial.create_delivery(1)
-        assert delivery == 'Something2'
-
-        delivery = trial.create_delivery(1)
-        assert delivery == 'Something3'
-
-        delivery = trial.create_delivery(1)
-        assert delivery == 'Something4'
-
-        assert len(mocked_input.call_args_list) == 8
+# delivery_orders,display_orders, edit_order, exit_cli
 
     @mock.patch('trial.input', create=True)
     @mock.patch('requests.get')
