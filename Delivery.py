@@ -15,7 +15,7 @@ class Delivery:
         '''Generates the json files that foodora requires
         '''
 
-        jsonfile = open('data.json', 'w')
+        jsonfile = open('delivery.json', 'w')
         #order_details = {}
         #for item in order:
         #    order_details['Item']

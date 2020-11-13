@@ -49,23 +49,29 @@ class OrderFactory():
         order = self.is_valid_order_number(order_number)
         if order is not None:
             return order.get_item_by_id(item_id)
-        return None
+        return "None"
     
     def is_pizza(self, order_number, item_number):
         order = self.is_valid_order_number(order_number)
-        return order.is_pizza(item_number)
+        if order is not None:
+            return order.is_pizza(item_number)
+        return "None"       
     
     def get_toppings(self, order_number, item_number):
         order = self.is_valid_order_number(order_number)
-        return order.get_toppings(item_number)
-
+        if order is not None:
+            return order.get_toppings(item_number)
+        return "None"
+        
     def schedule_delivery(self, order_number, delivery_type, address):
         order = self.is_valid_order_number(order_number)
-        return order.schedule_delivery(address, delivery_type)
+        if order is not None:
+            return order.schedule_delivery(address, delivery_type)
+        return "None"
     
     def update_item(self, order_number, item_number, to_update, value, add_or_remove=None):
         order = self.is_valid_order_number(order_number)
-        order.update_item(item_number, to_update, value, add_or_remove)
+        return order.update_item(item_number, to_update, value, add_or_remove)
     
     def update_totals(self):
         for order in self.orders:
@@ -126,22 +132,29 @@ class Order():
         return "None"
     
     def is_pizza(self, item_number):
-        if "pizza" in self.ids_to_items[item_number].get_type():
-            return "True"
-        return "False"
+        if item_number in self.ids_to_items:
+            if "pizza" in self.ids_to_items[item_number].get_type():
+                return "True"
+            return "False"
+        return "None"
 
     def remove_item(self, item_number):
         temp = None
         for i in range(0, len(self.items)):
-            if self.items[i].get_id() == item_number:
+            if self.items[i].id == item_number:
                 temp = i
+        if temp == None:
+            return "Invalid item id: item_number"
         del self.items[temp]
         del self.ids_to_items[item_number]
         self.update_total()
         return "Item with item number " + str(item_number) + " has been deleted from order number " + str(self.order_number) 
     
     def get_toppings(self, item_number):
-        return self.ids_to_items[item_number].get_toppings()
+        if self.is_pizza(item_number) == "True":
+            return self.ids_to_items[item_number].get_toppings()
+        else:
+            return "None: not a pizza"
 
     def get_delivery(self):
         return self.delivery
@@ -162,6 +175,7 @@ class Order():
             self.ids_to_items[item_number].update_brand(value)
         self.ids_to_items[item_number].update_prices()
         self.update_total()
+        return self.ids_to_items[item_number]
 
 
     

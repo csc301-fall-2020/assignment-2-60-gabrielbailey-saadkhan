@@ -61,6 +61,7 @@ class Pizza(Product):
         return result
     
     def update_prices(self):
+        self.prices_given = Data.getInstance().get_prices_dict()
         self.price = self.prices_given[self.type] * self.price_qualifier[self.size]
         for keys, values in self.toppings.items():
             if keys not in self.pizza_to_toppings[self.type]:
@@ -86,7 +87,7 @@ class Pizza(Product):
         self.size = size
     
     def __str__(self):
-        return '\033[1m' + "Item with ID: " + str(self.id) + '\033[0m' + "\nPizza Type: " + str(self.type) + "\nToppings: \n" + json.dumps(self.toppings, indent=4, sort_keys=True) + "\n"
+        return '\033[1m' + "Item with ID: " + str(self.id) + '\033[0m' + "\nPizza Type: " + str(self.type) + "\nPizza Size: " + str(self.size) +"\nToppings: \n" + json.dumps(self.toppings, indent=4, sort_keys=True) + "\n"
 
 
 class Drink(Product):

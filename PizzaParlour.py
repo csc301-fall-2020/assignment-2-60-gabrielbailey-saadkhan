@@ -80,7 +80,7 @@ def is_pizza(order_id, item_id):
     
     return order_fac.is_pizza(order_id, item_id)
 
-@bp.route('/get_toppings/<int:order_id>/<int:item_id>', methods = ['POST'])
+@bp.route('/get_toppings/<int:order_id>/<int:item_id>')
 def get_toppings(order_id, item_id):
     ''' Returns the toppings of the specified pizza.
     '''
@@ -102,9 +102,10 @@ def update_pizza(update_type):
             pizza_size = request.form.get('pizza_size',type=str)
             order_fac.update_item(order_number, item_number, update_type, pizza_size)
         elif update_type == 'toppings':
-            toppings = request.form.get('toppings',type=list)
-            add_or_remove = request.form.get('add_or_remove',type=bool)
+            toppings = request.form.getlist('toppings',type=str)
+            add_or_remove = request.form.get('add_or_remove',type=str)
             order_fac.update_item(order_number, item_number, update_type, toppings, add_or_remove)
+        return update_type
 
 @bp.route('/update_drink/<update_type>', methods = ['POST'])
 def update_drink(update_type):
@@ -115,7 +116,7 @@ def update_drink(update_type):
         order_number = request.form.get('order_number',type=int)
         item_number = request.form.get('item_number',type=int)
         drink_brand = request.form.get('drink_brand',type=str)
-        return order_fac.update_item(order_number, item_number, update_type, drink_brand)
+        return str(order_fac.update_item(order_number, item_number, update_type, drink_brand))
 
 @bp.route('/create_pizza', methods = ['POST'])
 def create_pizza():
@@ -132,14 +133,16 @@ def create_pizza():
             toppings = None
         items = []
         for i in range(0, int(quantity)):
-            print(toppings)
-            items.append(Pizza(pizza_type, 0, pizza_size, toppings))
+            try:
+                items.append(Pizza(pizza_type, 0, pizza_size, toppings))
+            except KeyError:
+                return("This pizza is invalid")
             
         return(order_fac.add_to_order(order_number, items))
 
 @bp.route('/get_data/<data_type>')
 def get_data(data_type):
-    ''' Returns a list of the specified type. Can be 'pizza_type', 'sizes', 'prices'.
+    ''' Returns a list of the specified type. Can be 'pizza_type', 'pizza_sizes', 'prices'.
     '''
 
     if data_type == 'pizza_types':
@@ -149,7 +152,7 @@ def get_data(data_type):
     if data_type == 'prices':
         return Data.getInstance().get_prices_dict()
     else:
-        return ["Not a valid datatype. Try 'pizza_type', 'sizes', or 'prices'."]
+        return "Invalid datatype. Try 'pizza_type', 'pizza_sizes', or 'prices'."
 
 @bp.route('/set_price', methods = ['POST'])
 def set_price():
@@ -160,12 +163,13 @@ def set_price():
         product_name = request.form.get('product_name',type=str)
         price = request.form.get('price',type=float)
         
-        if Data.getInstance().set_price(product_name,price):
+        if type(price) == float and type(product_name) == str and Data.getInstance().set_price(product_name,price):
             Data.getInstance().update_all()
             order_fac.update_totals()
             return product_name+"'s price set to "+str(price)
         else:
             return "Failure to set "+product_name+"'s price to "+str(price)
+
 @bp.route('/create_drink', methods = ['POST'])
 def create_drink():
     ''' Edits the item indicated in the update_type way using the provided data.

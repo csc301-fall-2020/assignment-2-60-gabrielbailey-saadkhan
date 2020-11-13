@@ -57,29 +57,29 @@ def get_valid_item_number(order_number):
         return "This order number is invalid: "+str(order_number)
     path = '/get_item'
     item = "None"
-    item_number = 0
+    item_number = input("Type a valid item number for this request or type 0 to see all items in this order: ")
     while type(item_number)!=int or item_number == 0 or item == "None":
         try:
-            item_number = input("Type a valid item number for this request or type 0 to see all items in this order: ")
             item_number = int(item_number)
             if item_number == 0:
                 response = requests.get(url+'/get_order'+'/'+str(order_number))
                 print(response.text)
+                item_number = input("Now type a valid item number for this request or type 0 to see all items in this order: ")
             else:
                 response = requests.get(url+path+'/'+str(order_number)+'/'+str(item_number))
                 item = response.text
                 if item == "None":
-                    print("Invalid Item Number")
+                    item_number = input("Invalid Item Number")
         except ValueError:
             item_number = input("Invalid item number. Please type a valid item number: ")
     return item_number
 
 def decide_item_to_edit(order_number, item_number):
     path = '/item_type'
-    is_pizza = requests.get(url+path+'/'+str(order_number)+'/'+str(item_number)).text
-    print(is_pizza)
+    is_pizza = requests.get(url+path+'/'+str(order_number)+'/'+str(item_number)).content
+    
     # ^This should be item type probably
-    if is_pizza == "True":
+    if is_pizza:
         edit_pizza(order_number, item_number)
     else:
         edit_drink(order_number, item_number)
@@ -168,12 +168,12 @@ def edit_pizza_toppings(order_number, item_number):
     if add_or_remove == "3":
         return
     elif add_or_remove == "1":
-        add_or_remove = True
+        add_or_remove = "add"
     else: 
-        add_or_remove = False
+        add_or_remove = "remove"
     toppings = custom_pizza_route(add_or_remove)
     path = '/update_pizza'
-    data = {'order_number': order_number, 'item_number':item_number, 'toppings': toppings, 'add_or_remove': add_or_remove }
+    data = {'order_number': order_number, 'item_number':item_number, 'toppings': ",".join(toppings), 'add_or_remove': add_or_remove }
     requests.post(url+path+'/toppings', data = data)
     
 
@@ -217,10 +217,10 @@ def create_new_pizza(order_number):
     data = {'order_number': order_number, 'quantity':quantity, 'pizza_type':pizza_type_dict[pizza_type], 'pizza_size': pizza_size_dict[pizza_size], 'toppings': toppings_list}
     print(requests.post(url+path, data = data).text)
 
-def custom_pizza_route(add_or_remove = True):
+def custom_pizza_route(add_or_remove = "add"):
     toppings = ["olives", "jalapenos", "tomatoes", "mushroom", "chicken", "beef", "pepperoni"]
     #print(toppings)
-    cond_words = [' add ',' on ',' adding '] if add_or_remove else [' remove ',' from ',' removing ']
+    cond_words = [' add ',' on ',' adding '] if add_or_remove == "add" else [' remove ',' from ',' removing ']
     for i in range(1,len(toppings)+1):
         print("Enter "+str(i)+" if you would like to"+cond_words[0]+toppings[i-1]+cond_words[1]+"your pizza")
     print("Enter "+str(len(toppings)+1)+" if you are finished"+cond_words[2]+"toppings")
