@@ -1053,6 +1053,39 @@ class CommandTest(unittest.TestCase):
 
         sys.stdout = sys.__stdout__                     # Reset redirect.
 
+    @mock.patch('trial.input', create=True) 
+    @mock.patch('requests.get')
+    def test_display_menu(self, mock_get,  mocked_input):
+        """Test whether the display_menu command works"""
+        
+        cli_output = io.StringIO()                  # Create StringIO object
+        sys.stdout = cli_output                     #  and redirect stdout.
+
+        mock_get.side_effect = [MockResponse('True', 200, json_dict = {'a':3.0,'zed':7.2,'nab_pizza':125.43,'drink':1.0})]
+
+        mocked_input.side_effect = ['1', '0',]
+        trial.display_menu()
+        assert "Pizza" in cli_output.getvalue()
+        assert "Topping" in cli_output.getvalue()
+        assert "Drink" in cli_output.getvalue()
+        assert "drink" not in cli_output.getvalue()
+        assert "invalid" in cli_output.getvalue().lower().split('\n')[-2] 
+
+        mock_get.side_effect = [MockResponse('True', 200, json_dict = {'a':3.0,'zed':7.2,'nab_pizza':125.43,'drink':1.0})]
+        mocked_input.side_effect = ['Coke','0']
+        trial.display_menu()
+        assert "$1.0" in cli_output.getvalue().split('\n')[-2] 
+        assert "zed" in cli_output.getvalue()
+        assert "nab_pizza" in cli_output.getvalue()
+
+        mock_get.side_effect = [MockResponse('True', 200, json_dict = {'a':3.0,'zed':7.2,'nab_pizza':125.43,'drink':1.0})]
+        mocked_input.side_effect = ['nab_pizza','0']
+        trial.display_menu()
+        assert "$125.43" in cli_output.getvalue().split('\n')[-2] 
+
+        assert len(mocked_input.call_args_list) == 6
+
+        sys.stdout = sys.__stdout__                     # Reset redirect.
 # delivery_orders,display_orders, edit_order, exit_cli
 
     @mock.patch('trial.input', create=True)

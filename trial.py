@@ -325,6 +325,42 @@ def display_orders():
     path = '/get_order_list'
     print(requests.get(url+path).text)
 
+def display_menu():
+    path = '/get_data/prices'
+    data = requests.get(url+path).json()
+    pizzas = []
+    toppings = []
+    drink_brands = ["Coke", "Diet Coke", "Coke Zero", "Pepsi", "Diet Pepsi", "Dr. Pepper", "Water", "Juice"]
+    for key in data:
+        if "pizza" in key:
+            pizzas.append(key)
+        elif key != "drink":
+            toppings.append(key)
+
+    print('\033[1m' + "Pizza Types:" + '\033[0m')
+    for pizza in pizzas:
+        print('  - '+pizza)
+    print('\033[1m' + "Toppings on a Custom Pizza:" + '\033[0m')
+    for topping in toppings:
+        print('  - '+topping)
+    print('\033[1m' + "Drink Brands:" + '\033[0m')
+    for drink in drink_brands:
+        print('  - '+drink)
+
+    item = input("Enter your 0 to return to the previous menu, or the exact name of a item on the menu (without the dash) to get its price: ")
+    while True:
+        if item == '0':
+            return
+        elif item in pizzas:
+            print(item + ': $' + str(data[item]))
+        elif item in toppings:
+            print(item + ': $' + str(data[item]))
+        elif item in drink_brands:
+            print(item + ': $' + str(data['drink']))
+        else:
+            print("Invalid choice.")
+        item = input("Enter 0 or one of the names above: ")
+
 def edit_order():
     order_number = get_valid_order_number()
     if order_number == None:
@@ -356,10 +392,12 @@ def set_price():
     for i in range(1,len(data)+1):
         print("Enter "+str(i)+" to change the price of "+str(keys[i-1])+": $"+str(data[keys[i-1]]))
 
-    index = input("Enter your choice: ")
+    index = input("Enter your choice or 0 to return to previous menu: ")
     while type(index) != int or index not in range(1,len(data)+1):
         try:
             index = int(index)
+            if index == 0:
+                return
             if index not in range(1,len(data)+1):
                 raise ValueError
         except ValueError:
@@ -406,8 +444,9 @@ if __name__ == "__main__":
         print("Enter 4 to cancel an order")
         print("Enter 5 for delivery options")
         print("Enter 6 to display all orders")
-        print("Enter 7 to change prices")
-        print("Enter 8 to exit")
+        print("Enter 7 to display the menu")
+        print("Enter 8 to change prices")
+        print("Enter 9 to exit")
         choice = input("Enter your choice: ")
         
         if choice == "1":
@@ -423,8 +462,10 @@ if __name__ == "__main__":
         elif choice == "6":
             display_orders()
         elif choice == "7":
-            set_price()
+            display_menu()
         elif choice == "8":
+            set_price()
+        elif choice == "9":
             exit_cli()
 
 
