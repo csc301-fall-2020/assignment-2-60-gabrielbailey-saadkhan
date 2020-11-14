@@ -43,20 +43,14 @@ class Delivery:
     def foodora_deliver(self, details):
         '''Generates the csv files that foodora requires
         '''
-        order_details_dict = []
-        for item in details:
-            if isinstance(item, Pizza):
-                order_details_dict.append({"Pizza Type": item.type, "Price": item.price})
-            else:
-                order_details_dict.append({"Drink Type": item.brand, "Price": item.price})
-
         csvfile = open('delivery.csv', 'w', newline='')
         csvwriter = csv.writer(csvfile)
-
-
-
         csvwriter.writerow([self.address])
-        csvwriter.writerow(order_details_dict)
+        for item in details:
+            if isinstance(item, Pizza):
+                csvwriter.writerow([item.type, item.price])
+            else:
+                csvwriter.writerow([item.brand, item.price])
         csvwriter.writerow([str(self.order_number)])
 
         # Should we send this file anywhere?
