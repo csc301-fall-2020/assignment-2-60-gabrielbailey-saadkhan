@@ -1,5 +1,6 @@
 import csv
 import json
+from Product import Pizza
 
 
 class Delivery:
@@ -14,6 +15,14 @@ class Delivery:
     def ubereats_deliver(self, details):
         '''Generates the json files that foodora requires
         '''
+        order_details_dict = []
+        for item in details:
+            if isinstance(item, Pizza):
+                order_details_dict.append({"Pizza Type": item.type, "Price": item.price})
+            else:
+                order_details_dict.append({"Drink Type": item.brand, "Price": item.price})
+
+
 
         jsonfile = open('delivery.json', 'w')
         #order_details = {}
@@ -22,7 +31,7 @@ class Delivery:
 
         data = {
             'Address':self.address,
-            'Order Details':details,
+            'Order Details':order_details_dict,
             'Order Number':self.order_number
             }
         json.dump(data, jsonfile)
@@ -34,6 +43,12 @@ class Delivery:
     def foodora_deliver(self, details):
         '''Generates the csv files that foodora requires
         '''
+        order_details_dict = []
+        for item in details:
+            if isinstance(item, Pizza):
+                order_details_dict.append({"Pizza Type": item.type, "Price": item.price})
+            else:
+                order_details_dict.append({"Drink Type": item.brand, "Price": item.price})
 
         csvfile = open('delivery.csv', 'w', newline='')
         csvwriter = csv.writer(csvfile)
@@ -41,7 +56,7 @@ class Delivery:
 
 
         csvwriter.writerow([self.address])
-        csvwriter.writerow([details])
+        csvwriter.writerow(order_details_dict)
         csvwriter.writerow([str(self.order_number)])
 
         # Should we send this file anywhere?

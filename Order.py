@@ -119,12 +119,6 @@ class Order():
         for items in self.items:
             string += "\n" + str(items)
         return string
-
-    def get_order_details(self):
-        details = "Order Total: " + str(self.order_total) + "\nItems in Order: "
-        for items in self.items:
-            details += "\n"+str(items) 
-        return details
     
     def get_item_by_id(self, item_id):
         if item_id in self.ids_to_items:
@@ -161,7 +155,7 @@ class Order():
 
     def schedule_delivery(self, address, delivery_type):
         self.delivery = Delivery(self.order_number, address, delivery_type)
-        return self.delivery.deliver(self.get_order_details())
+        return self.delivery.deliver(self.items)
     
     def update_item(self, item_number, to_update, value, add_or_remove = None):
         if to_update == "type":
