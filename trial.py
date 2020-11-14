@@ -25,7 +25,7 @@ def get_valid_order_number():
                 print("No current orders. Returning to a previous menu.")
                 return None
             else:
-                print(requests.get(url+path).text)
+                print(requests.get(url+'/get_order_list').text)
                 err = ''
         while type(order_number) != int:
             try:

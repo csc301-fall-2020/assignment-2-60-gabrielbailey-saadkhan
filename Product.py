@@ -1,5 +1,4 @@
 from Data import Data
-import pprint
 import json
 class Product:
     def __init__(self, type:str, price:float):
@@ -44,6 +43,9 @@ class Pizza(Product):
     def set_id(self, id):
         self.id = id
     
+    def get_id(self):
+        return self.id
+    
     def get_toppings(self):
         return json.dumps(self.toppings, indent=4, sort_keys=True)
     
@@ -67,9 +69,7 @@ class Pizza(Product):
             if keys not in self.pizza_to_toppings[self.type]:
                 self.price +=  self.prices_given[keys] * self.toppings[keys]
             elif self.toppings[keys] > self.pizza_to_toppings[self.type][keys]:
-                print("here")
                 self.price +=  self.prices_given[keys] * (self.toppings[keys] - self.pizza_to_toppings[self.type][keys])
-                print(self.price)
                 
     def update_toppings(self, add_or_remove, toppings):
         topping_dict = self.process_toppings(toppings)
