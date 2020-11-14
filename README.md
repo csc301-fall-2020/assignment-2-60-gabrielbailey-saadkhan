@@ -6,7 +6,7 @@ Run the CLI by running `python3 trial.py`
 
 Run unit tests with coverage by running `pytest --cov-report term --cov=. tests/unit_tests.py`
 
-The CLI is made up of several menues whish should be mostly self-explanatory. The main menu is:
+The CLI is made up of several menues which should be mostly self-explanatory. The main menu is:
 
 Enter 1 to create a new order
 Enter 2 to add products to an order
@@ -14,13 +14,14 @@ Enter 3 to update an order
 Enter 4 to cancel an order
 Enter 5 for delivery options
 Enter 6 to display all orders
-Enter 7 to change prices
-Enter 8 to exit
+Enter 7 to display the menu
+Enter 8 to change prices
+Enter 9 to exit
 
 The options that might need clarification:
 1 creates a new, empty order. It must have products added to it seperately.
 5 simply adds delivery data to an order, and if the delivery is by an external member, creates the requisite json or csv file titled delivery.
-7 changes the prices of base elements and updates the price of all orders with that information. Information regarding price and items is stored in json files, so is persistent.
+8 changes the prices of base elements and updates the price of all orders with that information. Information regarding price and items is stored in json files, so is persistent.
 
 Program Features:
 1. Submit an Order/Cancel Order
@@ -70,4 +71,6 @@ Tools:
 -We used pylint primarly to achieve consistent code style.
 
 Design Patterns:
--?
+-We have strong seperation of Frontend and Backend between trial.py which handles only the CLI and user input and PizzaParlour.py which calls on and uses the various object classes to perform all operations.
+-We have a singleton Data class that handles all persistent data.
+-We use OrderFactory as a builder class for the order list.
