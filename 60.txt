@@ -1,0 +1,74 @@
+Group: 60
+
+
+
+
+
+---------------------------
+Grade: 93
+---------------------------
+
+
+
+1- Pair Programming: 15 / 15
+---------------------------
+
+
+
+
+
+2- Program Design:  18 / 20
+---------------------------
+a) Design Patterns: 5
+
+
+
+b) Description of Rationale for Choosing Design Patterns: 5
+
+
+c) Code Coupling and Cohesion: 3
+Instances of design smells such as large classes exist that require refactoring.
+Different classes are better to be organized in different files.
+
+
+d) Function Design: 5
+
+
+
+
+
+
+3-  Functionality: 25  / 25
+---------------------------
+
+Almost all the expected functionalities are implemented.
+
+
+
+
+
+4-  Tests:  20 / 20
+--------------------------
+Almost enough test cases are developed to assess coverage.
+
+
+5-Code Craftsmanship:  8 / 10
+--------------------------
+
+
+Instances of code smell exist such as complictaed code and multiple if else statement exist that require refactoring.
+The info about the tools for analyzing and cleaning code is provided.
+
+
+
+
+
+6- MD Explanation and Organization:  7 / 10
+--------------------------
+The MD file is almost well organzied and contains the required information.
+The syntax of writing MD files is easy. Try to learn and apply the syntax to format the document and organize it.
+
+
+
+
+
